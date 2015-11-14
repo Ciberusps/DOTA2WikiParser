@@ -35,15 +35,17 @@
             this.metroTabControl1 = new MetroFramework.Controls.MetroTabControl();
             this.treasuresTabPage = new MetroFramework.Controls.MetroTabPage();
             this.treasuresUrlGrid = new MetroFramework.Controls.MetroGrid();
-            this.setsTabPage = new MetroFramework.Controls.MetroTabPage();
-            this.itemsTabPage = new MetroFramework.Controls.MetroTabPage();
             this.id = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.treasureName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.treasureRare = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.treasureCost = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.treasureImage = new System.Windows.Forms.DataGridViewImageColumn();
             this.url = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.setsTabPage = new MetroFramework.Controls.MetroTabPage();
+            this.itemsTabPage = new MetroFramework.Controls.MetroTabPage();
+            this.metroButton1 = new MetroFramework.Controls.MetroButton();
             this.parserBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.metroProgressBar1 = new MetroFramework.Controls.MetroProgressBar();
             this.metroTabControl1.SuspendLayout();
             this.treasuresTabPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.treasuresUrlGrid)).BeginInit();
@@ -65,6 +67,7 @@
             // 
             // treasuresTabPage
             // 
+            this.treasuresTabPage.Controls.Add(this.metroProgressBar1);
             this.treasuresTabPage.Controls.Add(this.treasuresUrlGrid);
             this.treasuresTabPage.HorizontalScrollbarBarColor = true;
             this.treasuresTabPage.HorizontalScrollbarHighlightOnWheel = false;
@@ -126,37 +129,9 @@
             this.treasuresUrlGrid.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.treasuresUrlGrid.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.treasuresUrlGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.treasuresUrlGrid.Size = new System.Drawing.Size(1240, 639);
+            this.treasuresUrlGrid.Size = new System.Drawing.Size(1240, 585);
             this.treasuresUrlGrid.TabIndex = 3;
             this.treasuresUrlGrid.Theme = MetroFramework.MetroThemeStyle.Dark;
-            // 
-            // setsTabPage
-            // 
-            this.setsTabPage.HorizontalScrollbarBarColor = true;
-            this.setsTabPage.HorizontalScrollbarHighlightOnWheel = false;
-            this.setsTabPage.HorizontalScrollbarSize = 10;
-            this.setsTabPage.Location = new System.Drawing.Point(4, 38);
-            this.setsTabPage.Name = "setsTabPage";
-            this.setsTabPage.Size = new System.Drawing.Size(972, 498);
-            this.setsTabPage.TabIndex = 2;
-            this.setsTabPage.Text = "Сеты";
-            this.setsTabPage.VerticalScrollbarBarColor = true;
-            this.setsTabPage.VerticalScrollbarHighlightOnWheel = false;
-            this.setsTabPage.VerticalScrollbarSize = 10;
-            // 
-            // itemsTabPage
-            // 
-            this.itemsTabPage.HorizontalScrollbarBarColor = true;
-            this.itemsTabPage.HorizontalScrollbarHighlightOnWheel = false;
-            this.itemsTabPage.HorizontalScrollbarSize = 10;
-            this.itemsTabPage.Location = new System.Drawing.Point(4, 38);
-            this.itemsTabPage.Name = "itemsTabPage";
-            this.itemsTabPage.Size = new System.Drawing.Size(972, 498);
-            this.itemsTabPage.TabIndex = 3;
-            this.itemsTabPage.Text = "Итемы";
-            this.itemsTabPage.VerticalScrollbarBarColor = true;
-            this.itemsTabPage.VerticalScrollbarHighlightOnWheel = false;
-            this.itemsTabPage.VerticalScrollbarSize = 10;
             // 
             // id
             // 
@@ -191,15 +166,62 @@
             this.url.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.url.Width = 300;
             // 
+            // setsTabPage
+            // 
+            this.setsTabPage.HorizontalScrollbarBarColor = true;
+            this.setsTabPage.HorizontalScrollbarHighlightOnWheel = false;
+            this.setsTabPage.HorizontalScrollbarSize = 10;
+            this.setsTabPage.Location = new System.Drawing.Point(4, 38);
+            this.setsTabPage.Name = "setsTabPage";
+            this.setsTabPage.Size = new System.Drawing.Size(1252, 649);
+            this.setsTabPage.TabIndex = 2;
+            this.setsTabPage.Text = "Сеты";
+            this.setsTabPage.VerticalScrollbarBarColor = true;
+            this.setsTabPage.VerticalScrollbarHighlightOnWheel = false;
+            this.setsTabPage.VerticalScrollbarSize = 10;
+            // 
+            // itemsTabPage
+            // 
+            this.itemsTabPage.HorizontalScrollbarBarColor = true;
+            this.itemsTabPage.HorizontalScrollbarHighlightOnWheel = false;
+            this.itemsTabPage.HorizontalScrollbarSize = 10;
+            this.itemsTabPage.Location = new System.Drawing.Point(4, 38);
+            this.itemsTabPage.Name = "itemsTabPage";
+            this.itemsTabPage.Size = new System.Drawing.Size(1252, 649);
+            this.itemsTabPage.TabIndex = 3;
+            this.itemsTabPage.Text = "Итемы";
+            this.itemsTabPage.VerticalScrollbarBarColor = true;
+            this.itemsTabPage.VerticalScrollbarHighlightOnWheel = false;
+            this.itemsTabPage.VerticalScrollbarSize = 10;
+            // 
+            // metroButton1
+            // 
+            this.metroButton1.Location = new System.Drawing.Point(979, 39);
+            this.metroButton1.Name = "metroButton1";
+            this.metroButton1.Size = new System.Drawing.Size(187, 51);
+            this.metroButton1.TabIndex = 1;
+            this.metroButton1.Text = "Parse";
+            this.metroButton1.Theme = MetroFramework.MetroThemeStyle.Dark;
+            this.metroButton1.UseSelectable = true;
+            this.metroButton1.Click += new System.EventHandler(this.metroButton1_Click);
+            // 
             // parserBindingSource
             // 
             this.parserBindingSource.DataSource = typeof(DOTA2WikiParser.ParserForm);
+            // 
+            // metroProgressBar1
+            // 
+            this.metroProgressBar1.Location = new System.Drawing.Point(3, 630);
+            this.metroProgressBar1.Name = "metroProgressBar1";
+            this.metroProgressBar1.Size = new System.Drawing.Size(781, 23);
+            this.metroProgressBar1.TabIndex = 4;
             // 
             // ParserForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1306, 786);
+            this.Controls.Add(this.metroButton1);
             this.Controls.Add(this.metroTabControl1);
             this.Name = "ParserForm";
             this.Text = "Парсер сокровищниц, итемов, сетов";
@@ -227,6 +249,8 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn treasureCost;
         private System.Windows.Forms.DataGridViewImageColumn treasureImage;
         private System.Windows.Forms.DataGridViewTextBoxColumn url;
+        private MetroFramework.Controls.MetroButton metroButton1;
+        private MetroFramework.Controls.MetroProgressBar metroProgressBar1;
     }
 }
 
