@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -13,6 +16,9 @@ using System.Windows.Forms;
 using HtmlAgilityPack;
 using MetroFramework.Forms;
 using System.Threading;
+using EnvDTE;
+using EnvDTE80;
+
 
 namespace DOTA2WikiParser
 {
@@ -23,13 +29,26 @@ namespace DOTA2WikiParser
         private static string _wikiSiteURL = "http://dota2.gamepedia.com";
         private static string _treasuresPageURL = "http://dota2.gamepedia.com/Treasure";
         private static List<Treasure> _treasures;
+        private static List<Set> _sets;
+        private static List<Item> _items;
         private static int _numOfTreasures = 126;
         private static ManualResetEvent[] manualEvents;
         private static int _gabenOffset = 0;
         private string _lastTreasureURL;
         private string _curTreasureURL;
+        private int _tresuresTempNum = /*0*/125;
+        private int _requestsNum = 20;
+        private int _nextRequest = 0;
+        //        private string _lastSetOrItemURL;
+
 
         public delegate void BarDelegate();
+
+        public ParserForm()
+        {
+            InitializeComponent();
+        }
+
         /*  "id": "1",
             "name": "Lost Treasure of the Ivory Isles",
             "rare": "common",
@@ -70,33 +89,13 @@ namespace DOTA2WikiParser
                 ]
             }*/
 
-        public ParserForm()
-        {
-            InitializeComponent();
-        }
-
         private void Form1_Load(object sender, EventArgs e)
         {
+            ThreadPool.SetMinThreads(_requestsNum + 10, _requestsNum + 10);
 
-//            _gabenOffset = 0;
             GetAllTreasuresPagesURLs();
 
             FullFIllTreasuresGrid();
-            //            ParseTreasure();
-            //            GetAllTreasuresInfo();
-
-            /*//HtmlNode title = _doc.DocumentNode.SelectSingleNode("//span[@itemprop='name'");
-            //HtmlNode title = _doc.DocumentNode.SelectSingleNode("//title");
-            //HtmlNode title = _doc.DocumentNode.SelectSingleNode("//span[@itemprop]");
-            HtmlNodeCollection title = _doc.DocumentNode.SelectNodes("//span");
-            // / root / actors / actor[@id = 1]
-
-            for (int i = 0; i < title.Count; i++)
-            {
-                Console.Write(title[i].InnerText);
-            }
-
-            Console.ReadKey();*/
         }
 
         private void FullFIllTreasuresGrid()
@@ -106,12 +105,66 @@ namespace DOTA2WikiParser
 
             for (int i = 0; i < _treasures.Count; i++)
             {
+                treasuresUrlGrid.Rows[i].Height = 100;
+
                 treasuresUrlGrid.Rows[i].Cells[0].Value = _treasures[i].id;
                 treasuresUrlGrid.Rows[i].Cells[1].Value = _treasures[i].name;
                 treasuresUrlGrid.Rows[i].Cells[2].Value = _treasures[i].rare;
                 treasuresUrlGrid.Rows[i].Cells[3].Value = _treasures[i].cost;
-                treasuresUrlGrid.Rows[i].Cells[4].Value = _treasures[i].img;
+                treasuresUrlGrid.Rows[i].Cells[4].Value = _treasures[i].imgDiv2;
                 treasuresUrlGrid.Rows[i].Cells[5].Value = _treasures[i].url;
+
+                if (_treasures[i].regularSetOrItem != null)
+                {
+                    string s = "";
+                    foreach (string s1 in _treasures[i].regularSetOrItem)
+                    {
+                        s += s1 + Environment.NewLine;
+                    }
+//                    Console.WriteLine(s);
+                    treasuresUrlGrid.Rows[_treasures[i].id - 1].Cells[6].Value = s;
+                }
+                else
+                    treasuresUrlGrid.Rows[_treasures[i].id - 1].Cells[6].Value = "NULL";
+
+                if (_treasures[i].veryRareSetOrItem != null)
+                {
+                    string s = "";
+                    foreach (string s1 in _treasures[i].veryRareSetOrItem)
+                    {
+                        s += s1 + Environment.NewLine;
+                    }
+//                    Console.WriteLine(s);
+                    treasuresUrlGrid.Rows[_treasures[i].id - 1].Cells[7].Value = s;
+                }
+                else
+                    treasuresUrlGrid.Rows[_treasures[i].id - 1].Cells[7].Value = "NULL";
+
+                if (_treasures[i].extremelyRareSetOrItem != null)
+                {
+                    string s = "";
+                    foreach (string s1 in _treasures[i].extremelyRareSetOrItem)
+                    {
+                        s += s1 + Environment.NewLine;
+                    }
+//                    Console.WriteLine(s);
+                    treasuresUrlGrid.Rows[_treasures[i].id - 1].Cells[8].Value = s;
+                }
+                else
+                    treasuresUrlGrid.Rows[_treasures[i].id - 1].Cells[8].Value = "NULL";
+
+                if (_treasures[i].ultraRareSetOrItem != null)
+                {
+                    string s = "";
+                    foreach (string s1 in _treasures[i].ultraRareSetOrItem)
+                    {
+                        s += s1 + Environment.NewLine;
+                    }
+//                    Console.WriteLine(s);
+                    treasuresUrlGrid.Rows[_treasures[i].id - 1].Cells[9].Value = s;
+                }
+                else
+                    treasuresUrlGrid.Rows[_treasures[i].id - 1].Cells[9].Value = "NULL";
             }
         }
 
@@ -125,7 +178,6 @@ namespace DOTA2WikiParser
             _lastTreasureURL = "";
             _treasures = new List<Treasure>(capacity: 150);
 
-            //            int id = _numOfTreasures;
             int i = 0;
             foreach (HtmlNode link in _treasuresTable.ChildNodes.Descendants("a"))
             {
@@ -142,50 +194,12 @@ namespace DOTA2WikiParser
             }
 
             _treasures.Sort(new TreasureByURL());
+
+            for (int j = 0; j < _treasures.Count; j++)
+            {
+                _treasures[j].id = j + 1;
+            }
         }
-
-        /*static void ParseTreasure(object state)
-        {
-            Treasure treasure = state as Treasure;
-            _webGet = new HtmlWeb();
-            _doc = _webGet.Load(_wikiSiteURL + treasure.url);
-
-            /*      ID      #1#
-            HtmlNode idAndName = _doc.DocumentNode.SelectSingleNode("//*[@id='firstHeading']/span");
-            string name = idAndName.InnerText.After(" - ");
-            int id = int.Parse(new string(idAndName.InnerText.TakeWhile(char.IsDigit).ToArray()));
-            if (name.Contains("Bonus"))
-            {
-                treasure.id = id + 1;
-            }
-            else
-            {
-                treasure.id = id;
-            }
-            MessageBox.Show(treasure.id.ToString());
-        }*/
-
-        /*static void ParseTreasure(Treasure treasure)
-        {
-            _webGet = new HtmlWeb();
-            _doc = _webGet.Load(_wikiSiteURL + treasure.url);
-
-            /*      ID      #1#
-            HtmlNode idAndName = _doc.DocumentNode.SelectSingleNode("//*[@id='firstHeading']/span");
-            string name = idAndName.InnerText.After(" - ");
-//            int id = int.Parse(new string(idAndName.InnerText.TakeWhile(char.IsDigit).ToArray()));
-
-            /*if (name.Contains("Bonus"))
-            {
-                _gabenOffset += 1;
-                treasure.id = id + _gabenOffset;
-            }
-            else
-            {
-                treasure.id = id + _gabenOffset;
-            }#1#
-            //            MessageBox.Show(treasure.id.ToString());
-        }*/
 
         void ParseTreasure(object treasureInfo)
         {
@@ -193,7 +207,164 @@ namespace DOTA2WikiParser
             _webGet = new HtmlWeb();
             _doc = _webGet.Load(_wikiSiteURL + treasure.url);
 
+            /*     Name    */
+            HtmlNode idAndName = _doc.DocumentNode.SelectSingleNode("//*[@id='firstHeading']/span");
+            string name = idAndName.InnerText.After(" - ");
+            treasure.name = name;
+
+            /*     Rare    */
+            HtmlNode rare =
+                _doc.DocumentNode.SelectSingleNode("//tr[3]/td/div/a/span/b");
+            treasure.rare = rare.InnerText;
+
+            /*    Img url  */
+            HtmlNode imgUrl = _doc.DocumentNode.SelectSingleNode("//tr[2]/td/a/img");
+            treasure.imgUrl = imgUrl.Attributes["src"].Value;
+
+            /* Load image  */
+            var request = WebRequest.Create(treasure.imgUrl);
+            var response = request.GetResponse();
+
+            using (var stream = response.GetResponseStream())
+            {
+                treasure.img = Image.FromStream(stream);
+            }
+
+            /* Img div 2   */
+            treasure.imgDiv2 = ResizeImage(treasure.img, 128, 85);
+
+            /* Regular */
+            HtmlNodeCollection allContent = _doc.DocumentNode.SelectNodes("//h3//span[@id]");
+            allContent.Add(_doc.DocumentNode.SelectSingleNode("//table[@class='navbox']"));
+            HtmlNodeCollection allLinks = _doc.DocumentNode.SelectNodes("//a");
+
+            string lastSetOrItemURL = "";
+
+            for (int i = 0; i < allContent.Count; i++)
+            {
+                if (allContent[i].InnerText == "Regular"
+                 || allContent[i].InnerText == "Equipment")
+                {
+                    if (treasure.regularSetOrItem == null)
+                    treasure.regularSetOrItem = new List<string>();
+
+                    foreach (var link in allLinks)
+                    {
+                        if (link.Line > allContent[i].Line
+                            && link.Line < allContent[i + 1].Line
+                            && link.Attributes["href"].Value != lastSetOrItemURL
+                            && !link.Attributes["href"].Value.Contains("?version="))
+                        {
+//                            Console.WriteLine(link.Attributes["href"].Value + " " + link.Line);
+                            treasure.regularSetOrItem.Add(link.Attributes["href"].Value);
+//                            Console.WriteLine(treasure.regularSetOrItem[treasure.regularSetOrItem.Count - 1]);
+
+                            lastSetOrItemURL = link.Attributes["href"].Value;
+                        }
+                    }
+                }
+
+                if (allContent[i].InnerText == "Very Rare"
+                 || allContent[i].InnerText == "Rare"
+                 || allContent[i].InnerText == "Very Rare Bonus"
+                 || allContent[i].InnerText == "Rare Bonus")
+                {
+                    if (treasure.veryRareSetOrItem == null)
+                        treasure.veryRareSetOrItem = new List<string>();
+
+                    foreach (var link in allLinks)
+                    {
+                        if (link.Line > allContent[i].Line
+                            && link.Line < allContent[i + 1].Line
+                            && link.Attributes["href"].Value != lastSetOrItemURL
+                            && !link.Attributes["href"].Value.Contains("?version="))
+                        {
+                            //                            Console.WriteLine(link.Attributes["href"].Value + " " + link.Line);
+                            treasure.veryRareSetOrItem.Add(link.Attributes["href"].Value);
+                            //                            Console.WriteLine(treasure.regularSetOrItem[treasure.regularSetOrItem.Count - 1]);
+
+                            lastSetOrItemURL = link.Attributes["href"].Value;
+                        }
+                    }
+                }
+
+                if (allContent[i].InnerText == "Extremely Rare"
+                 || allContent[i].InnerText == "Extremely Rare Bonus"
+                 || allContent[i].InnerText == "Extremely Bonus")
+                {
+                    if (treasure.extremelyRareSetOrItem == null)
+                        treasure.extremelyRareSetOrItem = new List<string>();
+
+                    foreach (var link in allLinks)
+                    {
+                        if (link.Line > allContent[i].Line
+                            && link.Line < allContent[i + 1].Line
+                            && link.Attributes["href"].Value != lastSetOrItemURL
+                            && !link.Attributes["href"].Value.Contains("?version="))
+                        {
+                            //                            Console.WriteLine(link.Attributes["href"].Value + " " + link.Line);
+                            treasure.extremelyRareSetOrItem.Add(link.Attributes["href"].Value);
+                            //                            Console.WriteLine(treasure.regularSetOrItem[treasure.regularSetOrItem.Count - 1]);
+
+                            lastSetOrItemURL = link.Attributes["href"].Value;
+                        }
+                    }
+                }
+
+                if (allContent[i].InnerText == "Ultra Rare"
+                 || allContent[i].InnerText == "Couriers"
+                 || allContent[i].InnerText == "Super Very Rare Bonus")
+                {
+                    if (treasure.ultraRareSetOrItem == null)
+                        treasure.ultraRareSetOrItem = new List<string>();
+
+                    foreach (var link in allLinks)
+                    {
+                        if (link.Line > allContent[i].Line
+                            && link.Line < allContent[i + 1].Line
+                            && link.Attributes["href"].Value != lastSetOrItemURL
+                            && !link.Attributes["href"].Value.Contains("?version="))
+                        {
+                            //                            Console.WriteLine(link.Attributes["href"].Value + " " + link.Line);
+                            treasure.ultraRareSetOrItem.Add(link.Attributes["href"].Value);
+                            //                            Console.WriteLine(treasure.regularSetOrItem[treasure.regularSetOrItem.Count - 1]);
+
+                            lastSetOrItemURL = link.Attributes["href"].Value;
+                        }
+                    }
+                }
+
+            }
+
+            //            MessageBox.Show(allContent[0].InnerText);
+            //            MessageBox.Show(allContent[1].InnerText);
+            //            MessageBox.Show(allContent[2].InnerText);
+            //            MessageBox.Show(allContent[3].InnerText);
+
             // Tell the UI we are done.
+            treasuresUrlGrid.Rows[treasure.id - 1].Cells[0].Value = treasure.id;
+            treasuresUrlGrid.Rows[treasure.id - 1].Cells[1].Value = treasure.name;
+            treasuresUrlGrid.Rows[treasure.id - 1].Cells[2].Value = treasure.rare;
+            treasuresUrlGrid.Rows[treasure.id - 1].Cells[3].Value = treasure.cost;
+            treasuresUrlGrid.Rows[treasure.id - 1].Cells[4].Value = treasure.imgDiv2;
+            treasuresUrlGrid.Rows[treasure.id - 1].Cells[5].Value = treasure.url;
+//            Console.WriteLine(treasure.regularSetOrItem);
+
+            /*if (treasure.regularSetOrItem != null)
+            {
+                string s = "";
+                foreach (string s1 in treasure.regularSetOrItem)
+                {
+                    Console.WriteLine(s1);
+
+                    s += s1 + Environment.NewLine;
+                }
+                Console.WriteLine(s);
+                treasuresUrlGrid.Rows[treasure.id - 1].Cells[6].Value = s;
+            }
+            else
+                treasuresUrlGrid.Rows[treasure.id - 1].Cells[6].Value = "NULL";*/
+
             try
             {
                 // Invoke the delegate on the form.
@@ -203,70 +374,42 @@ namespace DOTA2WikiParser
             {
                 // Some problem occurred but we can recover.
             }
-
-            /*      ID      */
-            HtmlNode idAndName = _doc.DocumentNode.SelectSingleNode("//*[@id='firstHeading']/span");
-            string name = idAndName.InnerText.After(" - ");
-            
         }
 
         private void ParseAllTreasures()
         {
-            metroProgressBar1.Maximum = 4/*_treasures.Count-1*/;
+            ClearOutput();
+            metroProgressBar1.Maximum = _tresuresTempNum/*_treasures.Count-1*/;
             metroProgressBar1.Minimum = 0;
 
-            for (int i = 0; i < 5 /*_treasures.Count*/; i++)
-            {
-                _treasures[i].id = i + 1;
-                ThreadPool.QueueUserWorkItem(new WaitCallback(ParseTreasure), _treasures[i]);
-            }
-            /*using (var finished = new CountdownEvent(1))
-            {
-                for (int i = 0; i < 5 /*_treasures.Count#1#; i++)
-                {
-                    _treasures[i].id = i + 1;
-                    var capture = _treasures[i];
-                    finished.AddCount();
-                    ThreadPool.QueueUserWorkItem(
-                        (state) =>
-                        {
-                            try
-                            {
-                                ParseTreasure(capture);
-                            }
-                            finally
-                            {
-                                finished.Signal();
-                            }
-
-                        }, null);
-                }
-
-                finished.Signal(); // Signal that queueing is complete.
-                finished.Wait(); // Wait for all work items to complete.
-            }*/
-
-            /*for (int i = 0; i < _treasures.Count; i++)
-            {
-                //ThreadPool.QueueUserWorkItem(ParseTreasure(_treasures[i]));
-                //                ThreadPool.QueueUserWorkItem(new WaitCallback(ParseTreasure), _treasures[i]);
-            }*/
-
-            /*ThreadPool.QueueUserWorkItem(new WaitCallback(ParseTreasure), _treasures[0]);
-            ThreadPool.QueueUserWorkItem(new WaitCallback(ParseTreasure), _treasures[125]);
-            ThreadPool.QueueUserWorkItem(new WaitCallback(ParseTreasure), _treasures[88]);*/
-
+                        ParseTreasuresInRange(0, _requestsNum);
             /*ParseTreasure(_treasures[0]);
-            ParseTreasure(_treasures[125]);
-            ParseTreasure(_treasures[88]);*/
+            ParseTreasure(_treasures[66]);
+            ParseTreasure(_treasures[125]);*/
 
             _treasures.Sort(new TreasureByID());
+        }
+
+        private void ParseTreasuresInRange(int start, int count)
+        {
+            _nextRequest += _requestsNum;
+            for (int i = start; i < start + count; i++)
+            {
+                if (i >= _tresuresTempNum/*_treasures.Count - 1*/)
+                    return;
+                ThreadPool.QueueUserWorkItem(new WaitCallback(ParseTreasure), _treasures[i]);
+            }
         }
 
         // Update the graphical bar.
         private void UpdateBar()
         {
             metroProgressBar1.Value++;
+            if (metroProgressBar1.Value > _nextRequest)
+            {
+                ParseTreasuresInRange(_nextRequest, _requestsNum);
+            }
+
             if (metroProgressBar1.Value == metroProgressBar1.Maximum)
             {
                 // We are finished and the progress bar is full.
@@ -274,53 +417,45 @@ namespace DOTA2WikiParser
             }
         }
 
+        protected void ClearOutput()
+        {
+            DTE2 ide = (DTE2)System.Runtime.InteropServices.Marshal.GetActiveObject("VisualStudio.DTE.14.0");
+            ide.ToolWindows.OutputWindow.OutputWindowPanes.Item("Debug").Clear();
+            System.Runtime.InteropServices.Marshal.ReleaseComObject(ide);
+        }
+
         private void metroButton1_Click(object sender, EventArgs e)
         {
             ParseAllTreasures();
         }
 
-        /* static void GetAllTreasuresInfo()
-         {
-             _webGet = new HtmlWeb();
-             _doc = _webGet.Load(_wikiSiteURL + _tURLs[0]);
+        public static Bitmap ResizeImage(Image image, int width, int height)
+        {
+            var destRect = new Rectangle(0, 0, width, height);
+            var destImage = new Bitmap(width, height);
 
-             /*var a = doc.DocumentNode.SelectSingleNode("//a[@name=""a""]")
-             Console.WriteLine(a.NextSibling.InnerText)#1#
+            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
 
-             HtmlNode regular = _doc.DocumentNode.SelectSingleNode("//h3//span[@id]");
-             //            if (regular.Attributes[""])
+            using (var graphics = Graphics.FromImage(destImage))
+            {
+                graphics.CompositingMode = CompositingMode.SourceCopy;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
-             /*HtmlNodeCollection regular =
-                 _doc.DocumentNode.SelectNodes(
-                     "//div[@style]//a[@href]");
+                using (var wrapMode = new ImageAttributes())
+                {
+                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
+                }
+            }
 
-             foreach (HtmlNode htmlNode in regular.Nodes())
-             {
-                 /*foreach (HtmlNode node in htmlNode.SelectNodes("//a[@href]"))
-                 {
-
-                 }#2#
-
-                 Console.WriteLine(htmlNode.InnerText);
-
-                 //                Console.WriteLine(htmlNode.SelectSingleNode("a[@href]").InnerText); 
-                 /*foreach (HtmlNode node in htmlNode.ChildNodes.Descendants("a"))
-                 {
-                     Console.WriteLine(node.InnerText);
-                 }#2#
-             }#1#
-
-             /*foreach (var tURL in _tURLs)
-             {
-
-             }#1#
-         }
-     }
- }*/
-
+            return destImage;
+        }
     }
 
-    public class Treasure
+    public class Entity
     {
         public string url;
 
@@ -331,12 +466,41 @@ namespace DOTA2WikiParser
         public string image;
 
         public Image img;
+        public Image imgDiv2;
         public string imgUrl;
+    }
+
+
+    public class Treasure : Entity
+    {
+        /*public string url;
+
+        public int id;
+        public string name;
+        public string rare;
+        public string cost;
+        public string image;
+        */
+
+        public List<string> regularSetOrItem;
+        public List<string> veryRareSetOrItem;
+        public List<string> extremelyRareSetOrItem;
+        public List<string> ultraRareSetOrItem;
 
         public List<Hashtable> giftsRegular;
         public List<Hashtable> giftsVeryRare;
         public List<Hashtable> giftsExtremelyRare;
         public List<Hashtable> giftsUltraRare;
+    }
+
+    public class Set : Entity
+    {
+
+    }
+
+    public class Item : Entity
+    {
+
     }
 
     public class TreasureByID : Comparer<Treasure>
@@ -429,4 +593,8 @@ namespace DOTA2WikiParser
             return value.Substring(adjustedPosA);
         }
     }
+
+
+
+
 }
