@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -51,13 +52,25 @@ namespace DOTA2WikiParser
         private ArrayList _treasuresJSONArray;
         private int setsId = 1;
         private int itemsId = 1;
+        private int _nextTreasure = 0;
+        private int _requestsInTreasure = 0;
+        private int _requestsInSum = 0;
+
 
         //Sets
         private static List<Set> _sets;
+        private ArrayList _setsJSONArray;
+        private string _setsImagesPath = @"H:\GIT\Treasure Simulator DOTA 2\ParsedFiles\raw\setsImg";
+        private string _setsImagesPathDiv2 = @"H:\GIT\Treasure Simulator DOTA 2\ParsedFiles\raw\setsImgDiv2";
 
         //Items
         private static List<Item> _items;
-
+        private int _requestSetOrItemsNum = 10;
+        private int _nextSetOrItemRequest = 0;
+        private int _numOfReg = 0;
+        private string _itemsImagesPath = @"H:\GIT\Treasure Simulator DOTA 2\ParsedFiles\raw\itemsImg";
+        private string _itemsImagesPathDiv2 = @"H:\GIT\Treasure Simulator DOTA 2\ParsedFiles\raw\itemsImgDiv2";
+        private ArrayList _itemsJSONArray;
 
         public delegate void BarDelegate();
 
@@ -136,10 +149,10 @@ namespace DOTA2WikiParser
 
                     if (_treasures[i].giftsRegular != null)
                     {
-                        for (int j = 0; j < _treasures[i].regularSetOrItem.Count-1; j++)
+                        for (int j = 0; j < _treasures[i].regularSetOrItem.Count - 1; j++)
                         {
                             Hashtable regHash = _treasures[i].giftsRegular[j] as Hashtable;
-                            s += "  " + _treasures[i].regularSetOrItem[j]  + " - " + regHash["type"] + ":" + regHash["id"] + Environment.NewLine;
+                            s += "  " + _treasures[i].regularSetOrItem[j] + " - " + regHash["type"] + ":" + regHash["id"] + Environment.NewLine;
                         }
                     }
                     else
@@ -149,7 +162,7 @@ namespace DOTA2WikiParser
                             s += "  " + s1 + Environment.NewLine;
                         }
                     }
-                    
+
                     //                    Console.WriteLine(s);
                     treasuresGrid.Rows[_treasures[i].id - 1].Cells[6].Value = s;
                 }
@@ -311,7 +324,8 @@ namespace DOTA2WikiParser
 
             allContent.Add(_doc.DocumentNode.SelectSingleNode("//table[@class='navbox']"));
 
-            HtmlNodeCollection allLinks = _doc.DocumentNode.SelectNodes("//div//a");
+            //            HtmlNodeCollection allLinks = _doc.DocumentNode.SelectNodes("//div//a");
+            HtmlNodeCollection allLinks = _doc.DocumentNode.SelectNodes("//div/div/a");
 
             string lastSetOrItemURL = "";
             Console.WriteLine("Загаловков (h3, h2): " + allContent.Count);
@@ -441,7 +455,7 @@ namespace DOTA2WikiParser
             try
             {
                 // Invoke the delegate on the form.
-                this.Invoke(new BarDelegate(UpdateBar));
+                this.Invoke(new BarDelegate(UpdateTreasuresBar));
             }
             catch
             {
@@ -478,7 +492,7 @@ namespace DOTA2WikiParser
             _treasures.Sort(new TreasureByID());
         }
 
-        private void ParseAllSetsOrItemsToArrays()
+        private void ParseAllSetsOrItems()
         {
             for (int i = 0; i < _treasures.Count; i++)
             {
@@ -500,15 +514,15 @@ namespace DOTA2WikiParser
                         setOrItemInfo.type = "Regular";
                         setOrItemInfo.i = j;
 
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(FullFiilTreasureOrSetInfo), setOrItemInfo);
+                        ThreadPool.QueueUserWorkItem(new WaitCallback(FullFillSetOrItemInfo), setOrItemInfo);
 
-                        //                        FullFiilTreasureOrSetInfo(_treasures[i].regularSetOrItem[j].ToString());
+                        //                        FullFillSetOrItemInfo(_treasures[i].regularSetOrItem[j].ToString());
                     }
                 }
             }
         }
 
-        private void FullFiilTreasureOrSetInfo(object setOrItemInfo)
+        private void FullFillSetOrItemInfo(object setOrItemInfo)
         {
             SetOrItemInfo info = setOrItemInfo as SetOrItemInfo;
             var _webGet = new HtmlWeb();
@@ -523,9 +537,11 @@ namespace DOTA2WikiParser
             if (_items == null)
                 _items = new List<Item>();
 
+            Console.WriteLine(info.treasure.id);
+
             if (type != null)
             {
-                Console.WriteLine(type.InnerText);
+                //                Console.WriteLine(type.InnerText);
                 if (type.InnerText.Contains("Bundle"))
                 {
                     bool hasAlready = false;
@@ -551,9 +567,11 @@ namespace DOTA2WikiParser
                         set.id = setsId;
                         setsId++;
 
-                        set.name = _doc.DocumentNode.SelectSingleNode("//table[@class]//tr[1]/td").InnerText;
+                        set.name = _doc.DocumentNode.SelectSingleNode("//table[@class]//tr[1]/td").InnerText.Trim();
 
                         set.cost = "0";
+
+                        set.rare = _doc.DocumentNode.SelectSingleNode("//table[@class]//tr[3]//b").InnerText.Trim();
 
                         HtmlNode imgUrl = _doc.DocumentNode.SelectSingleNode("//table//tr[2]/td/a/img");
                         set.imgUrl = imgUrl.Attributes["src"].Value;
@@ -604,9 +622,12 @@ namespace DOTA2WikiParser
                         item.id = itemsId;
                         itemsId++;
 
-                        item.name = _doc.DocumentNode.SelectSingleNode("//table[@class]//tr[1]/td").InnerText;
+                        item.name = _doc.DocumentNode.SelectSingleNode("//table[@class]//tr[1]/td").InnerText.Trim();
 
                         item.cost = "0";
+
+                        //                        item.rare = _doc.DocumentNode.SelectSingleNode("//table[@class]//tr[3]/td[2]/div/a/span/b").InnerText;
+                        item.rare = _doc.DocumentNode.SelectSingleNode("//table[@class]//tr[3]//b").InnerText.Trim();
 
                         HtmlNode imgUrl = _doc.DocumentNode.SelectSingleNode("//table//tr[2]/td/a/img");
                         item.imgUrl = imgUrl.Attributes["src"].Value;
@@ -633,18 +654,113 @@ namespace DOTA2WikiParser
                         _items.Add(item);
                         //                Console.WriteLine("Item: " + info.treasure.id);
                     }
-
                 }
             }
             else
             {
                 Console.WriteLine(info.treasure.id);
             }
+
+            try
+            {
+                // Invoke the delegate on the form.
+                this.Invoke(new BarDelegate(UpdateSetOrItemBar));
+            }
+            catch
+            {
+                // Some problem occurred but we can recover.
+            }
+        }
+
+        /*private void ParseAllSetsOrItemsInRange(int start, int count)
+        {
+            _nextSetOrItemRequest += _requestSetOrItemsNum;
+            Console.WriteLine("Start: " + start + " end: " + (start + count));
+            for (int i = start; i < start + count; i++)
+            {
+                if (i >= _treasures.Count)
+                    return;
+                if (_treasures[i].regularSetOrItem != null)
+                {
+                    _treasures[i].giftsRegular = new ArrayList();
+
+                    for (int j = 0; j < _treasures[i].regularSetOrItem.Count; j++)
+                    {
+                        Hashtable regularSetOrItemInfo = new Hashtable();
+                        regularSetOrItemInfo.Add("type", "null");
+                        regularSetOrItemInfo.Add("id", "null");
+
+                        _treasures[i].giftsRegular.Add(regularSetOrItemInfo);
+
+                        SetOrItemInfo setOrItemInfo = new SetOrItemInfo();
+                        setOrItemInfo.treasure = _treasures[i];
+                        setOrItemInfo.url = _treasures[i].regularSetOrItem[j].ToString();
+                        setOrItemInfo.type = "Regular";
+                        setOrItemInfo.i = j;
+
+                        ThreadPool.QueueUserWorkItem(new WaitCallback(FullFillSetOrItemInfo), setOrItemInfo);
+
+                        //                        FullFillSetOrItemInfo(_treasures[i].regularSetOrItem[j].ToString());
+                    }
+                }
+            }
+        }*/
+
+        private void ParseAllSetsOrItemsInTreasures()
+        {
+            ParseAllSetsOrItemsInTreasure(_treasures[0]);
+        }
+
+        private void ParseAllSetsOrItemsInTreasure(Treasure treasure)
+        {
+            //            _nextSetOrItemRequest += _requestSetOrItemsNum;
+            //            Console.WriteLine("Start: " + start + " end: " + (start + count));
+            //            for (int i = start; i < start + count; i++)
+            //            {
+            //                if (i >= _treasures.Count)
+            //                    return;
+            if (treasure.regularSetOrItem != null)
+            {
+                _requestsInTreasure += treasure.regularSetOrItem.Count;
+                Console.WriteLine("Requests in treasure: " + _requestsInTreasure);
+            }
+
+            if (treasure.regularSetOrItem != null)
+            {
+                treasure.giftsRegular = new ArrayList();
+
+                for (int j = 0; j < treasure.regularSetOrItem.Count; j++)
+                {
+                    Hashtable regularSetOrItemInfo = new Hashtable();
+                    regularSetOrItemInfo.Add("type", "null");
+                    regularSetOrItemInfo.Add("id", "null");
+
+                    treasure.giftsRegular.Add(regularSetOrItemInfo);
+
+                    SetOrItemInfo setOrItemInfo = new SetOrItemInfo();
+                    setOrItemInfo.treasure = treasure;
+                    setOrItemInfo.url = treasure.regularSetOrItem[j].ToString();
+                    setOrItemInfo.type = "Regular";
+                    setOrItemInfo.i = j;
+
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(FullFillSetOrItemInfo), setOrItemInfo);
+
+                    //                        FullFillSetOrItemInfo(_treasures[i].regularSetOrItem[j].ToString());
+                }
+            }
+
+            if (_requestsInTreasure == 0)
+            {
+                _requestsInTreasure = 0;
+                _nextTreasure++;
+                ParseAllSetsOrItemsInTreasure(_treasures[_nextTreasure]);
+            }
+            //            }
         }
 
         private void ParseItem(Treasure treasure, Item item)
         {
-            
+
         }
 
         private void FullFillItemsGrid()
@@ -654,7 +770,7 @@ namespace DOTA2WikiParser
 
             for (int i = 0; i < _items.Count; i++)
             {
-//                _items[i].id = i + 1;
+                //                _items[i].id = i + 1;
                 itemsGrid.Rows[i].Height = 45;
                 itemsGrid.Rows[i].Cells[0].Value = _items[i].id;
                 itemsGrid.Rows[i].Cells[1].Value = _items[i].name;
@@ -662,16 +778,18 @@ namespace DOTA2WikiParser
                 itemsGrid.Rows[i].Cells[3].Value = _items[i].cost;
                 itemsGrid.Rows[i].Cells[4].Value = _items[i].imgDiv2;
                 itemsGrid.Rows[i].Cells[5].Value = _items[i].url;
+                itemsGrid.Rows[i].Cells[6].Value = _items[i].slot;
             }
         }
 
         private void FullFillSetsGrid()
         {
             setsGrid.Rows.Clear();
-            setsGrid.Rows.Add(_sets.Count );
+            setsGrid.Rows.Add(_sets.Count);
 
             for (int i = 0; i < _sets.Count; i++)
             {
+                setsGrid.Rows[i].Height = 45;
                 setsGrid.Rows[i].Cells[0].Value = _sets[i].id;
                 setsGrid.Rows[i].Cells[1].Value = _sets[i].name;
                 setsGrid.Rows[i].Cells[2].Value = _sets[i].rare;
@@ -682,7 +800,7 @@ namespace DOTA2WikiParser
         }
 
         // Update the graphical bar.
-        private void UpdateBar()
+        private void UpdateTreasuresBar()
         {
             metroProgressBar1.Value++;
             if (metroProgressBar1.Value >= _nextRequest)
@@ -694,6 +812,26 @@ namespace DOTA2WikiParser
             {
                 // We are finished and the progress bar is full.
                 FullFIllTreasuresGrid();
+            }
+        }
+
+        private void UpdateSetOrItemBar()
+        {
+            metroProgressBar2.Value++;
+            if (metroProgressBar2.Value >= _requestsInSum + _requestsInTreasure)
+            {
+                _requestsInSum += _requestsInTreasure;
+                _requestsInTreasure = 0;
+                _nextTreasure++;
+                if (_nextTreasure != _treasures.Count)
+                    ParseAllSetsOrItemsInTreasure(_treasures[_nextTreasure]);
+            }
+            //                ParseAllSetsOrItemsInRange(_nextSetOrItemRequest, _requestSetOrItemsNum);
+
+            if (metroProgressBar2.Value == metroProgressBar2.Maximum)
+            {
+                // We are finished and the progress bar is full.
+                //                FullFIllTreasuresGrid();
             }
         }
 
@@ -727,7 +865,20 @@ namespace DOTA2WikiParser
 
         private void metroButton2_Click(object sender, EventArgs e)
         {
-            ParseAllSetsOrItemsToArrays();
+            _numOfReg = 0;
+            for (int i = 0; i < _treasures.Count; i++)
+            {
+                //                Console.WriteLine(i);
+                if (_treasures[i].regularSetOrItem != null)
+                    _numOfReg += _treasures[i].regularSetOrItem.Count;
+            }
+
+            Console.WriteLine(_numOfReg);
+
+            metroProgressBar2.Maximum = _numOfReg/*_treasures.Count-1*/;
+            metroProgressBar2.Minimum = 0;
+
+            ParseAllSetsOrItemsInTreasures();
         }
 
         public static Bitmap ResizeImage(Image image, int width, int height)
@@ -760,15 +911,23 @@ namespace DOTA2WikiParser
             _treasuresJSONString = System.IO.File.ReadAllText(@_treasuresJSONFilePath);
             _treasuresJSONRoot = MiniJSON.JsonDecode(_treasuresJSONString) as Hashtable;
             _treasuresJSONArray = _treasuresJSONRoot["treasures"] as ArrayList;
+            _setsJSONArray = _treasuresJSONRoot["sets"] as ArrayList;
+            _itemsJSONArray = _treasuresJSONRoot["items"] as ArrayList;
 
 #if DEBUG_SAVING
             Console.WriteLine("Parsed: " + _treasuresJSONString);
 #endif
-            /* Fullfill info */
-            _treasuresJSONArray.Clear();
+            /* Fullfill Treasures info */
 
             if (_treasuresJSONArray == null)
+            {
                 _treasuresJSONArray = new ArrayList();
+                _treasuresJSONRoot.Add("treasures", _treasuresJSONArray);
+            }
+            else
+            {
+                _treasuresJSONArray.Clear();
+            }
 
             foreach (Treasure treasure in _treasures)
             {
@@ -780,7 +939,12 @@ namespace DOTA2WikiParser
                 treasureHashtable.Add("cost", treasure.cost);
                 treasureHashtable.Add("sprite", treasure.imgUrl);
 
+                /*if (System.IO.File.Exists(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png"))
+                    System.IO.File.Delete(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");*/
                 treasure.img.Save(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");
+
+                /*if (System.IO.File.Exists(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png"))
+                    System.IO.File.Delete(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");*/
                 treasure.imgDiv2.Save(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");
 
                 if (treasure.regularSetOrItem != null)
@@ -806,7 +970,75 @@ namespace DOTA2WikiParser
                 _treasuresJSONArray.Add(treasureHashtable);
             }
 
+            if (_setsJSONArray == null)
+            {
+                Console.WriteLine("VOID");
+                _setsJSONArray = new ArrayList();
+                _treasuresJSONRoot.Add("sets", _setsJSONArray);
+            }
+            else
+            {
+                _setsJSONArray.Clear();
+                Console.WriteLine("CLEAR");
+            }
+
+            foreach (Set set in _sets)
+            {
+                Hashtable setHashtable = new Hashtable();
+                setHashtable.Add("url", set.url);
+                setHashtable.Add("id", set.id.ToString());
+                setHashtable.Add("name", set.name);
+                setHashtable.Add("rare", set.rare);
+                setHashtable.Add("cost", set.cost);
+                setHashtable.Add("sprite", set.imgUrl);
+
+                /*if (System.IO.File.Exists(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png"))
+                    System.IO.File.Delete(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");*/
+                set.img.Save(@_setsImagesPath + @"\" + set.id + "_" + /*set.name + */".png");
+
+                /*if (System.IO.File.Exists(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png"))
+                    System.IO.File.Delete(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");*/
+                set.imgDiv2.Save(@_setsImagesPathDiv2+ @"\" + set.id + "_" + /*set.name + */".png");
+
+                _setsJSONArray.Add(setHashtable);
+            }
+
+            /* Fullfill items info */
+            if (_itemsJSONArray == null)
+            {
+                _itemsJSONArray = new ArrayList();
+                _treasuresJSONRoot.Add("items", _itemsJSONArray);
+            }
+            else
+            {
+                _itemsJSONArray.Clear();
+            }
+
+            foreach (Item item in _items)
+            {
+                Hashtable itemHashtable = new Hashtable();
+                itemHashtable.Add("url", item.url);
+                itemHashtable.Add("id", item.id.ToString());
+                itemHashtable.Add("name", item.name);
+                itemHashtable.Add("rare", item.rare);
+                itemHashtable.Add("cost", item.cost);
+                itemHashtable.Add("sprite", item.imgUrl);
+
+                /*if (System.IO.File.Exists(@_itemsImagesPath + @"\" + item.id + "_" + item.name + ".png"))
+                    System.IO.File.Delete(@_itemsImagesPath + @"\" + item.id + "_" + item.name + ".png");*/
+                item.img.Save(@_itemsImagesPath + @"\" + @item.id + "_" + /*item.name + */".png");
+
+
+                /*if (System.IO.File.Exists(@_itemsImagesPathDiv2 + @"\" + item.id + "_" + item.name + ".png"))
+                    System.IO.File.Delete(@_itemsImagesPathDiv2 + @"\" + item.id + "_" + item.name + ".png");*/
+                item.imgDiv2.Save(@_itemsImagesPathDiv2 + @"\" + @item.id + "_" + /*item.name + */".png");
+
+                _itemsJSONArray.Add(itemHashtable);
+            }
+
             string json = MiniJSON.JsonEncode(_treasuresJSONRoot);
+            Console.WriteLine("Saved: " + json);
+
             System.IO.File.WriteAllText(@_treasuresJSONFilePath, json);
 #if DEBUG_SAVING
             Console.WriteLine("Saved: " + json);
@@ -818,6 +1050,8 @@ namespace DOTA2WikiParser
             _treasuresJSONString = System.IO.File.ReadAllText(@_treasuresJSONFilePath);
             _treasuresJSONRoot = MiniJSON.JsonDecode(_treasuresJSONString) as Hashtable;
             _treasuresJSONArray = _treasuresJSONRoot["treasures"] as ArrayList;
+            _setsJSONArray = _treasuresJSONRoot["sets"] as ArrayList;
+            _itemsJSONArray = _treasuresJSONRoot["items"] as ArrayList;
 
 #if DEBUG_LOADING
             Console.WriteLine("Parsed: " + _treasuresJSONString);
@@ -842,8 +1076,17 @@ namespace DOTA2WikiParser
                     treasure.cost = hashtable["cost"].ToString();
                     treasure.imgUrl = hashtable["sprite"].ToString();
 
-                    treasure.img = Image.FromFile(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");
-                    treasure.imgDiv2 = Image.FromFile(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");
+
+                    using (var bmpTemp = new Bitmap(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png"))
+                    {
+                        treasure.img = new Bitmap(bmpTemp);
+                    }
+                    using (var bmpTemp = new Bitmap(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png"))
+                    {
+                        treasure.imgDiv2 = new Bitmap(bmpTemp);
+                    }
+                    //treasure.img = Image.FromFile(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");
+                    //treasure.imgDiv2 = Image.FromFile(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");
 
                     if (hashtable.ContainsKey("Regular"))
                         treasure.regularSetOrItem = hashtable["Regular"] as ArrayList;
@@ -857,6 +1100,73 @@ namespace DOTA2WikiParser
                     _treasures.Add(treasure);
                 }
             }
+
+            if (_setsJSONArray != null)
+            {
+                if (_sets != null)
+                    _sets.Clear();
+                else
+                    _sets = new List<Set>();
+
+                foreach (Hashtable hashtable in _setsJSONArray)
+                {
+                    Set set = new Set();
+
+                    set.url = hashtable["url"].ToString();
+                    set.id = int.Parse(hashtable["id"].ToString());
+                    set.name = hashtable["name"].ToString();
+                    set.rare = hashtable["rare"].ToString();
+                    set.cost = hashtable["cost"].ToString();
+                    set.imgUrl = hashtable["sprite"].ToString();
+
+                    using (var bmpTemp = new Bitmap(@_setsImagesPath + @"\" + set.id + "_" + /*set.name + */".png"))
+                    {
+                        set.img = new Bitmap(bmpTemp);
+                    }
+                    using (var bmpTemp = new Bitmap(@_setsImagesPathDiv2 + @"\" + set.id + "_" + /*set.name + */".png"))
+                    {
+                        set.imgDiv2 = new Bitmap(bmpTemp);
+                    }
+                    //treasure.img = Image.FromFile(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");
+                    //treasure.imgDiv2 = Image.FromFile(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");
+
+                    _sets.Add(set);
+                }
+            }
+
+            if (_itemsJSONArray != null)
+            {
+                if (_items != null)
+                    _items.Clear();
+                else
+                    _items = new List<Item>();
+
+                foreach (Hashtable hashtable in _itemsJSONArray)
+                {
+                    Item item = new Item();
+
+                    item.url = hashtable["url"].ToString();
+                    item.id = int.Parse(hashtable["id"].ToString());
+                    item.name = hashtable["name"].ToString();
+                    item.rare = hashtable["rare"].ToString();
+                    item.cost = hashtable["cost"].ToString();
+                    item.imgUrl = hashtable["sprite"].ToString();
+
+                    using (var bmpTemp = new Bitmap(@_itemsImagesPath + @"\" + item.id + "_" + /*item.name + */".png"))
+                    {
+                        item.img = new Bitmap(bmpTemp);
+                    }
+                    using (var bmpTemp = new Bitmap(@_itemsImagesPathDiv2+ @"\" + item.id + "_" + /*item.name + */".png"))
+                    {
+                        item.imgDiv2 = new Bitmap(bmpTemp);
+                    }
+                    //treasure.img = Image.FromFile(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");
+                    //treasure.imgDiv2 = Image.FromFile(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");
+
+                    _items.Add(item);
+                }
+            }
+
         }
 
         public class MiniJSON
