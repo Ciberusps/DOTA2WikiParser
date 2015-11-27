@@ -60,6 +60,7 @@
             this.extremelyRare = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ultraRare = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.setsTabPage = new MetroFramework.Controls.MetroTabPage();
+            this.metroProgressBar3 = new MetroFramework.Controls.MetroProgressBar();
             this.setsGrid = new MetroFramework.Controls.MetroGrid();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -110,7 +111,7 @@
             this.metroTabControl1.Controls.Add(this.itemsTabPage);
             this.metroTabControl1.Location = new System.Drawing.Point(23, 109);
             this.metroTabControl1.Name = "metroTabControl1";
-            this.metroTabControl1.SelectedIndex = 2;
+            this.metroTabControl1.SelectedIndex = 1;
             this.metroTabControl1.Size = new System.Drawing.Size(1540, 665);
             this.metroTabControl1.TabIndex = 0;
             this.metroTabControl1.Theme = MetroFramework.MetroThemeStyle.Dark;
@@ -281,6 +282,7 @@
             // 
             // setsTabPage
             // 
+            this.setsTabPage.Controls.Add(this.metroProgressBar3);
             this.setsTabPage.Controls.Add(this.setsGrid);
             this.setsTabPage.HorizontalScrollbarBarColor = true;
             this.setsTabPage.HorizontalScrollbarHighlightOnWheel = false;
@@ -294,6 +296,15 @@
             this.setsTabPage.VerticalScrollbarBarColor = true;
             this.setsTabPage.VerticalScrollbarHighlightOnWheel = false;
             this.setsTabPage.VerticalScrollbarSize = 10;
+            // 
+            // metroProgressBar3
+            // 
+            this.metroProgressBar3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.metroProgressBar3.Location = new System.Drawing.Point(-4, 604);
+            this.metroProgressBar3.Name = "metroProgressBar3";
+            this.metroProgressBar3.Size = new System.Drawing.Size(1511, 23);
+            this.metroProgressBar3.TabIndex = 7;
             // 
             // setsGrid
             // 
@@ -390,8 +401,9 @@
             // 
             // slot
             // 
-            this.slot.HeaderText = "Slot";
+            this.slot.HeaderText = "Items";
             this.slot.Name = "slot";
+            this.slot.Width = 200;
             // 
             // itemsTabPage
             // 
@@ -535,7 +547,7 @@
             this.metroButton2.Name = "metroButton2";
             this.metroButton2.Size = new System.Drawing.Size(187, 27);
             this.metroButton2.TabIndex = 2;
-            this.metroButton2.Text = "Parse Sets";
+            this.metroButton2.Text = "Parse all sets or items";
             this.metroButton2.Theme = MetroFramework.MetroThemeStyle.Dark;
             this.metroButton2.UseSelectable = true;
             this.metroButton2.Click += new System.EventHandler(this.metroButton2_Click);
@@ -577,9 +589,10 @@
             this.metroButton5.Name = "metroButton5";
             this.metroButton5.Size = new System.Drawing.Size(187, 27);
             this.metroButton5.TabIndex = 7;
-            this.metroButton5.Text = "Save Items Parsing Info";
+            this.metroButton5.Text = "Parse all items from set";
             this.metroButton5.Theme = MetroFramework.MetroThemeStyle.Dark;
             this.metroButton5.UseSelectable = true;
+            this.metroButton5.Click += new System.EventHandler(this.metroButton5_Click);
             // 
             // metroButton6
             // 
@@ -587,7 +600,7 @@
             this.metroButton6.Name = "metroButton6";
             this.metroButton6.Size = new System.Drawing.Size(187, 27);
             this.metroButton6.TabIndex = 6;
-            this.metroButton6.Text = "Save Sets Parsing Info";
+            this.metroButton6.Text = "Refresh items grid";
             this.metroButton6.Theme = MetroFramework.MetroThemeStyle.Dark;
             this.metroButton6.UseSelectable = true;
             this.metroButton6.Click += new System.EventHandler(this.metroButton6_Click);
@@ -620,7 +633,7 @@
             this.metroButton9.Name = "metroButton9";
             this.metroButton9.Size = new System.Drawing.Size(187, 27);
             this.metroButton9.TabIndex = 10;
-            this.metroButton9.Text = "Load Sets Parsing Info";
+            this.metroButton9.Text = "Refresh sets grid";
             this.metroButton9.Theme = MetroFramework.MetroThemeStyle.Dark;
             this.metroButton9.UseSelectable = true;
             this.metroButton9.Click += new System.EventHandler(this.metroButton9_Click);
@@ -631,9 +644,10 @@
             this.metroButton10.Name = "metroButton10";
             this.metroButton10.Size = new System.Drawing.Size(187, 27);
             this.metroButton10.TabIndex = 11;
-            this.metroButton10.Text = "Load Items Parsing Info";
+            this.metroButton10.Text = "Parse all items from set II";
             this.metroButton10.Theme = MetroFramework.MetroThemeStyle.Dark;
             this.metroButton10.UseSelectable = true;
+            this.metroButton10.Click += new System.EventHandler(this.metroButton10_Click);
             // 
             // parserBindingSource
             // 
@@ -704,13 +718,6 @@
         private MetroFramework.Controls.MetroButton metroButton8;
         private MetroFramework.Controls.MetroButton metroButton9;
         private MetroFramework.Controls.MetroButton metroButton10;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
-        private System.Windows.Forms.DataGridViewImageColumn dataGridViewImageColumn1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn5;
-        private System.Windows.Forms.DataGridViewTextBoxColumn slot;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn6;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn7;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn8;
@@ -719,6 +726,14 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn10;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn11;
         private MetroFramework.Controls.MetroProgressBar metroProgressBar2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
+        private System.Windows.Forms.DataGridViewImageColumn dataGridViewImageColumn1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn5;
+        private System.Windows.Forms.DataGridViewTextBoxColumn slot;
+        private MetroFramework.Controls.MetroProgressBar metroProgressBar3;
     }
 }
 

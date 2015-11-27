@@ -62,6 +62,10 @@ namespace DOTA2WikiParser
         private ArrayList _setsJSONArray;
         private string _setsImagesPath = @"H:\GIT\Treasure Simulator DOTA 2\ParsedFiles\raw\setsImg";
         private string _setsImagesPathDiv2 = @"H:\GIT\Treasure Simulator DOTA 2\ParsedFiles\raw\setsImgDiv2";
+        private int _nextSet;
+        private int _requestsInSet;
+        private int _numOfSetsItemsReq;
+        private bool _firstPartOfSet = true;
 
         //Items
         private static List<Item> _items;
@@ -492,7 +496,7 @@ namespace DOTA2WikiParser
             _treasures.Sort(new TreasureByID());
         }
 
-        private void ParseAllSetsOrItems()
+        /*private void ParseAllSetsOrItems()
         {
             for (int i = 0; i < _treasures.Count; i++)
             {
@@ -520,7 +524,7 @@ namespace DOTA2WikiParser
                     }
                 }
             }
-        }
+        }*/
 
         private void FullFillSetOrItemInfo(object setOrItemInfo)
         {
@@ -593,8 +597,108 @@ namespace DOTA2WikiParser
                         setInfo.Add("id", set.id);
                         info.treasure.giftsRegular.Insert(info.i, setInfo);
 
+                        /* Parse itemsurls */
+                        HtmlNodeCollection h2 = _doc.DocumentNode.SelectNodes("//h2//span[@id]");
+                        HtmlNodeCollection h3 = _doc.DocumentNode.SelectNodes("//h3//span[@id]");
+                        HtmlNodeCollection h4 = _doc.DocumentNode.SelectNodes("//h4//span[@id]");
+
+                        HtmlNodeCollection allContent = new HtmlNodeCollection(h2[0]);
+
+                        if (h2 != null)
+                            for (int i = 0; i < h2.Count; i++)
+                            {
+                                allContent.Add(h2[i]);
+                            }
+
+                        if (h3 != null)
+                            for (int i = 0; i < h3.Count; i++)
+                            {
+                                allContent.Add(h3[i]);
+                            }
+
+                        if (h4 != null)
+                            for (int i = 0; i < h4.Count; i++)
+                            {
+                                allContent.Add(h4[i]);
+                            }
+
+                        /*Sorting allContent*/
+                        for (int i = 0; i < allContent.Count; i++)
+                        {
+                            for (int j = i + 1; j < allContent.Count; j++)
+                            {
+                                if (allContent[j].Line < allContent[i].Line)
+                                {
+                                    var temp = allContent[i];
+                                    allContent[i] = allContent[j];
+                                    allContent[j] = temp;
+                                }
+                            }
+                        }
+
+                        foreach (HtmlNode htmlNode in allContent)
+                        {
+                            Console.WriteLine(htmlNode.Line + " " + htmlNode.InnerText);
+                        }
+
+                        allContent.Add(_doc.DocumentNode.SelectSingleNode("//table[@class='navbox']"));
+
+                        //            HtmlNodeCollection allLinks = _doc.DocumentNode.SelectNodes("//div//a");
+                        HtmlNodeCollection allLinks = _doc.DocumentNode.SelectNodes("//div/div/a");
+
+                        string lastSetOrItemURL = "";
+                        Console.WriteLine("Загаловков (h3, h2, h4): " + allContent.Count);
+
+                        for (int i = 0; i < allContent.Count; i++)
+                        {
+                            if (i != allContent.Count - 1)
+                                Console.WriteLine(allContent[i].InnerText + " : " + allContent[i].Line);
+                            else
+                                Console.WriteLine(allContent[i].Line);
+
+                            if (allContent[i].InnerText == "Set Items"
+                                || allContent[i].InnerText == "Set items"
+                                || allContent[i].InnerText == "Set Item"
+                                || allContent[i].InnerText == "Set item"
+                                || allContent[i].InnerText == "Contents")
+                            {
+                                if (set.setItemsURLs == null)
+                                    //                        treasure.regularSetOrItem = new List<string>();
+                                    set.setItemsURLs = new ArrayList();
+
+                                foreach (var link in allLinks)
+                                {
+                                    if (link.Line > allContent[i].Line
+                                        && link.Line < allContent[i + 1].Line
+                                        && link.Attributes["href"].Value != lastSetOrItemURL
+                                        && !link.Attributes["href"].Value.Contains("?version=")
+                                        && !link.Attributes["href"].Value.Contains("index.php"))
+                                    {
+                                        Console.WriteLine("\v" + link.Attributes["href"].Value + " " + link.Line);
+                                        set.setItemsURLs.Add(link.Attributes["href"].Value);
+                                        //                            Console.WriteLine(treasure.regularSetOrItem[treasure.regularSetOrItem.Count - 1]);
+
+                                        lastSetOrItemURL = link.Attributes["href"].Value;
+                                    }
+                                }
+                            }
+                        }
+
                         _sets.Add(set);
                         //                Console.WriteLine("Set: " + info.treasure.id);
+                    }
+                }
+                else if (type.InnerText.Contains("None"))
+                {
+                    foreach (Treasure s in _treasures)
+                    {
+                        if (s.url == info.url)
+                        {
+                            Hashtable itemInfo = new Hashtable();
+                            itemInfo.Add("type", "treasure");
+                            itemInfo.Add("id", s.id);
+                            info.treasure.giftsRegular.Insert(info.i, itemInfo);
+                        }
                     }
                 }
                 else
@@ -652,6 +756,16 @@ namespace DOTA2WikiParser
                         info.treasure.giftsRegular.Insert(info.i, itemInfo);
 
                         _items.Add(item);
+
+
+                        /*itemsGrid.Rows[itemsId].Height = 45;
+                        itemsGrid.Rows[itemsId].Cells[0].Value = _items[itemsId].id;
+                        itemsGrid.Rows[itemsId].Cells[1].Value = _items[itemsId].name;
+                        itemsGrid.Rows[itemsId].Cells[2].Value = _items[itemsId].rare;
+                        itemsGrid.Rows[itemsId].Cells[3].Value = _items[itemsId].cost;
+                        itemsGrid.Rows[itemsId].Cells[4].Value = _items[itemsId].imgDiv2;
+                        itemsGrid.Rows[itemsId].Cells[5].Value = _items[itemsId].url;
+                        itemsGrid.Rows[itemsId].Cells[6].Value = _items[itemsId].slot;*/
                         //                Console.WriteLine("Item: " + info.treasure.id);
                     }
                 }
@@ -692,7 +806,7 @@ namespace DOTA2WikiParser
 
                         _treasures[i].giftsRegular.Add(regularSetOrItemInfo);
 
-                        SetOrItemInfo setOrItemInfo = new SetOrItemInfo();
+                        ItemInfo setOrItemInfo = new ItemInfo();
                         setOrItemInfo.treasure = _treasures[i];
                         setOrItemInfo.url = _treasures[i].regularSetOrItem[j].ToString();
                         setOrItemInfo.type = "Regular";
@@ -708,7 +822,8 @@ namespace DOTA2WikiParser
 
         private void ParseAllSetsOrItemsInTreasures()
         {
-            ParseAllSetsOrItemsInTreasure(_treasures[0]);
+            _nextTreasure = 0;
+            ParseAllSetsOrItemsInTreasure(_treasures[_nextTreasure]);
         }
 
         private void ParseAllSetsOrItemsInTreasure(Treasure treasure)
@@ -720,10 +835,18 @@ namespace DOTA2WikiParser
             //                if (i >= _treasures.Count)
             //                    return;
             if (treasure.regularSetOrItem != null)
-            {
                 _requestsInTreasure += treasure.regularSetOrItem.Count;
-                Console.WriteLine("Requests in treasure: " + _requestsInTreasure);
-            }
+
+            if (treasure.veryRareSetOrItem != null)
+                _requestsInTreasure += treasure.veryRareSetOrItem.Count;
+
+            if (treasure.ultraRareSetOrItem != null)
+                _requestsInTreasure += treasure.ultraRareSetOrItem.Count;
+
+            if (treasure.extremelyRareSetOrItem != null)
+                _requestsInTreasure += treasure.extremelyRareSetOrItem.Count;
+
+            Console.WriteLine("Requests in treasure: " + _requestsInTreasure);
 
             if (treasure.regularSetOrItem != null)
             {
@@ -749,6 +872,75 @@ namespace DOTA2WikiParser
                 }
             }
 
+            if (treasure.veryRareSetOrItem != null)
+            {
+                treasure.giftsVeryRare = new ArrayList();
+
+                for (int j = 0; j < treasure.veryRareSetOrItem.Count; j++)
+                {
+                    Hashtable veryRareSetOrItemInfo = new Hashtable();
+                    veryRareSetOrItemInfo.Add("type", "null");
+                    veryRareSetOrItemInfo.Add("id", "null");
+
+                    treasure.giftsRegular.Add(veryRareSetOrItemInfo);
+
+                    SetOrItemInfo setOrItemInfo = new SetOrItemInfo();
+                    setOrItemInfo.treasure = treasure;
+                    setOrItemInfo.url = treasure.veryRareSetOrItem[j].ToString();
+                    setOrItemInfo.type = "VeryRare";
+                    setOrItemInfo.i = j;
+
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(FullFillSetOrItemInfo), setOrItemInfo);
+                    //                        FullFillSetOrItemInfo(_treasures[i].regularSetOrItem[j].ToString());
+                }
+            }
+
+            if (treasure.ultraRareSetOrItem != null)
+            {
+                treasure.giftsUltraRare = new ArrayList();
+
+                for (int j = 0; j < treasure.ultraRareSetOrItem.Count; j++)
+                {
+                    Hashtable ultraRareSetOrItem = new Hashtable();
+                    ultraRareSetOrItem.Add("type", "null");
+                    ultraRareSetOrItem.Add("id", "null");
+
+                    treasure.giftsRegular.Add(ultraRareSetOrItem);
+
+                    SetOrItemInfo setOrItemInfo = new SetOrItemInfo();
+                    setOrItemInfo.treasure = treasure;
+                    setOrItemInfo.url = treasure.ultraRareSetOrItem[j].ToString();
+                    setOrItemInfo.type = "VeryRare";
+                    setOrItemInfo.i = j;
+
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(FullFillSetOrItemInfo), setOrItemInfo);
+                    //                        FullFillSetOrItemInfo(_treasures[i].regularSetOrItem[j].ToString());
+                }
+            }
+
+            if (treasure.extremelyRareSetOrItem != null)
+            {
+                treasure.giftsExtremelyRare = new ArrayList();
+
+                for (int j = 0; j < treasure.extremelyRareSetOrItem.Count; j++)
+                {
+                    Hashtable extremelyRareSetOrItem = new Hashtable();
+                    extremelyRareSetOrItem.Add("type", "null");
+                    extremelyRareSetOrItem.Add("id", "null");
+
+                    treasure.giftsRegular.Add(extremelyRareSetOrItem);
+
+                    SetOrItemInfo setOrItemInfo = new SetOrItemInfo();
+                    setOrItemInfo.treasure = treasure;
+                    setOrItemInfo.url = treasure.extremelyRareSetOrItem[j].ToString();
+                    setOrItemInfo.type = "VeryRare";
+                    setOrItemInfo.i = j;
+
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(FullFillSetOrItemInfo), setOrItemInfo);
+                    //                        FullFillSetOrItemInfo(_treasures[i].regularSetOrItem[j].ToString());
+                }
+            }
+
             if (_requestsInTreasure == 0)
             {
                 _requestsInTreasure = 0;
@@ -756,11 +948,6 @@ namespace DOTA2WikiParser
                 ParseAllSetsOrItemsInTreasure(_treasures[_nextTreasure]);
             }
             //            }
-        }
-
-        private void ParseItem(Treasure treasure, Item item)
-        {
-
         }
 
         private void FullFillItemsGrid()
@@ -796,6 +983,16 @@ namespace DOTA2WikiParser
                 setsGrid.Rows[i].Cells[3].Value = _sets[i].cost;
                 setsGrid.Rows[i].Cells[4].Value = _sets[i].imgDiv2;
                 setsGrid.Rows[i].Cells[5].Value = _sets[i].url;
+
+                if (_sets[i].setItemsURLs != null)
+                {
+                    var s = "";
+                    foreach (string itemUrL in _sets[i].setItemsURLs)
+                    {
+                        s += itemUrL + Environment.NewLine;
+                    }
+                    setsGrid.Rows[i].Cells[6].Value = s;
+                }
             }
         }
 
@@ -835,75 +1032,42 @@ namespace DOTA2WikiParser
             }
         }
 
+        private void UpdateSetBar()
+        {
+            metroProgressBar3.Value++;
+//            Console.WriteLine("   Bar: " + metroProgressBar3.Value +
+//                              "\n   NextSet " + _nextSet +
+//                              "   reqInSum " + _requestsInSum);
+            if (metroProgressBar3.Value >= _requestsInSum + _requestsInSet)
+            {
+                _requestsInSum += _requestsInSet;
+                _requestsInSet = 0;
+                _nextSet++;
+                Console.WriteLine(_nextSet);
+                if (_firstPartOfSet && _nextSet != _sets.Count/2)
+                    ParseAllItemsFromSet(_sets[_nextSet]);
+                else if (_nextSet == _sets.Count/2)
+                    MessageBox.Show("First part end");
+
+                if (!_firstPartOfSet && _nextSet != _sets.Count)
+                    ParseAllItemsFromSet(_sets[_nextSet]);
+                else if (_nextSet == _sets.Count)
+                    MessageBox.Show("Second part end");
+            }
+
+            if (metroProgressBar3.Value == metroProgressBar3.Maximum)
+            {
+                MessageBox.Show("End");
+                // We are finished and the progress bar is full.
+                //                FullFIllTreasuresGrid();
+            }
+        }
+
         protected void ClearOutput()
         {
             DTE2 ide = (DTE2)System.Runtime.InteropServices.Marshal.GetActiveObject("VisualStudio.DTE.14.0");
             ide.ToolWindows.OutputWindow.OutputWindowPanes.Item("Debug").Clear();
             System.Runtime.InteropServices.Marshal.ReleaseComObject(ide);
-        }
-
-        private void metroButton1_Click(object sender, EventArgs e)
-        {
-            ParseAllTreasures();
-        }
-
-        private void metroButton4_Click(object sender, EventArgs e)
-        {
-            FullFIllTreasuresGrid();
-        }
-
-        private void metroButton7_Click(object sender, EventArgs e)
-        {
-            SaveTreasuresParsingInfoToFile();
-        }
-
-        private void metroButton8_Click(object sender, EventArgs e)
-        {
-            LoadTreasuresParsingInfoFromFile();
-            FullFIllTreasuresGrid();
-        }
-
-        private void metroButton2_Click(object sender, EventArgs e)
-        {
-            _numOfReg = 0;
-            for (int i = 0; i < _treasures.Count; i++)
-            {
-                //                Console.WriteLine(i);
-                if (_treasures[i].regularSetOrItem != null)
-                    _numOfReg += _treasures[i].regularSetOrItem.Count;
-            }
-
-            Console.WriteLine(_numOfReg);
-
-            metroProgressBar2.Maximum = _numOfReg/*_treasures.Count-1*/;
-            metroProgressBar2.Minimum = 0;
-
-            ParseAllSetsOrItemsInTreasures();
-        }
-
-        public static Bitmap ResizeImage(Image image, int width, int height)
-        {
-            var destRect = new Rectangle(0, 0, width, height);
-            var destImage = new Bitmap(width, height);
-
-            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
-
-            using (var graphics = Graphics.FromImage(destImage))
-            {
-                graphics.CompositingMode = CompositingMode.SourceCopy;
-                graphics.CompositingQuality = CompositingQuality.HighQuality;
-                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                graphics.SmoothingMode = SmoothingMode.HighQuality;
-                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-
-                using (var wrapMode = new ImageAttributes())
-                {
-                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
-                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
-                }
-            }
-
-            return destImage;
         }
 
         public void SaveTreasuresParsingInfoToFile()
@@ -998,7 +1162,12 @@ namespace DOTA2WikiParser
 
                 /*if (System.IO.File.Exists(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png"))
                     System.IO.File.Delete(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");*/
-                set.imgDiv2.Save(@_setsImagesPathDiv2+ @"\" + set.id + "_" + /*set.name + */".png");
+                set.imgDiv2.Save(@_setsImagesPathDiv2 + @"\" + set.id + "_" + /*set.name + */".png");
+
+                if (set.setItemsURLs != null)
+                {
+                    setHashtable.Add("items", set.setItemsURLs);
+                }
 
                 _setsJSONArray.Add(setHashtable);
             }
@@ -1023,6 +1192,7 @@ namespace DOTA2WikiParser
                 itemHashtable.Add("rare", item.rare);
                 itemHashtable.Add("cost", item.cost);
                 itemHashtable.Add("sprite", item.imgUrl);
+                itemHashtable.Add("slot", item.slot);
 
                 /*if (System.IO.File.Exists(@_itemsImagesPath + @"\" + item.id + "_" + item.name + ".png"))
                     System.IO.File.Delete(@_itemsImagesPath + @"\" + item.id + "_" + item.name + ".png");*/
@@ -1127,6 +1297,9 @@ namespace DOTA2WikiParser
                     {
                         set.imgDiv2 = new Bitmap(bmpTemp);
                     }
+
+                    if (hashtable.ContainsKey("items"))
+                        set.setItemsURLs = hashtable["items"] as ArrayList;
                     //treasure.img = Image.FromFile(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");
                     //treasure.imgDiv2 = Image.FromFile(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");
 
@@ -1151,12 +1324,13 @@ namespace DOTA2WikiParser
                     item.rare = hashtable["rare"].ToString();
                     item.cost = hashtable["cost"].ToString();
                     item.imgUrl = hashtable["sprite"].ToString();
+                    item.slot = hashtable["slot"].ToString();
 
                     using (var bmpTemp = new Bitmap(@_itemsImagesPath + @"\" + item.id + "_" + /*item.name + */".png"))
                     {
                         item.img = new Bitmap(bmpTemp);
                     }
-                    using (var bmpTemp = new Bitmap(@_itemsImagesPathDiv2+ @"\" + item.id + "_" + /*item.name + */".png"))
+                    using (var bmpTemp = new Bitmap(@_itemsImagesPathDiv2 + @"\" + item.id + "_" + /*item.name + */".png"))
                     {
                         item.imgDiv2 = new Bitmap(bmpTemp);
                     }
@@ -1167,6 +1341,255 @@ namespace DOTA2WikiParser
                 }
             }
 
+        }
+
+        private void metroButton1_Click(object sender, EventArgs e)
+        {
+            ParseAllTreasures();
+        }
+
+        private void metroButton4_Click(object sender, EventArgs e)
+        {
+            FullFIllTreasuresGrid();
+        }
+
+        private void metroButton7_Click(object sender, EventArgs e)
+        {
+            SaveTreasuresParsingInfoToFile();
+        }
+
+        private void metroButton8_Click(object sender, EventArgs e)
+        {
+            LoadTreasuresParsingInfoFromFile();
+            FullFIllTreasuresGrid();
+        }
+
+        private void metroButton2_Click(object sender, EventArgs e)
+        {
+            _sets.Clear();
+            _items.Clear();
+
+            _numOfReg = 0;
+            for (int i = 0; i < _treasures.Count; i++)
+            {
+                //                Console.WriteLine(i);
+                if (_treasures[i].regularSetOrItem != null)
+                    _numOfReg += _treasures[i].regularSetOrItem.Count;
+                if (_treasures[i].veryRareSetOrItem != null)
+                    _numOfReg += _treasures[i].veryRareSetOrItem.Count;
+                if (_treasures[i].ultraRareSetOrItem != null)
+                    _numOfReg += _treasures[i].ultraRareSetOrItem.Count;
+                if (_treasures[i].extremelyRareSetOrItem != null)
+                    _numOfReg += _treasures[i].extremelyRareSetOrItem.Count;
+            }
+
+            Console.WriteLine(_numOfReg);
+
+            metroProgressBar2.Maximum = _numOfReg/*_treasures.Count-1*/;
+            metroProgressBar2.Minimum = 0;
+
+            ParseAllSetsOrItemsInTreasures();
+        }
+
+        private void metroButton6_Click(object sender, EventArgs e)
+        {
+            FullFillItemsGrid();
+        }
+
+        private void metroButton9_Click(object sender, EventArgs e)
+        {
+            FullFillSetsGrid();
+        }
+
+        private void metroButton5_Click(object sender, EventArgs e)
+        {
+            //            ParseAllItemsFromSet();
+            _nextSet = 0;
+            itemsId = _items.Count;
+            setsId = _sets.Count;
+
+            foreach (Set set in _sets)
+            {
+                _numOfSetsItemsReq += set.setItemsURLs.Count;
+            }
+
+            metroProgressBar3.Maximum = _numOfSetsItemsReq/*_treasures.Count-1*/;
+            metroProgressBar3.Minimum = 0;
+
+            ParseAllItemsFromSet(_sets[_nextSet]);
+        }
+
+        /*private void ParseAllItemsFromSet(Set set)
+        {
+            if (set.setItemsURLs != null)
+            {
+                set.setItems = new ArrayList();
+
+                for (int j = 0; j < set.setItemsURLs.Count; j++)
+                {
+                    Hashtable itemInfoHash = new Hashtable();
+                    itemInfoHash.Add("type", "null");
+                    itemInfoHash.Add("id", "null");
+
+                    set.setItems.Add(itemInfoHash);
+
+                    ItemInfo itemInfo = new ItemInfo();
+                    itemInfo.set = set;
+                    itemInfo.url = set.setItemsURLs[j].ToString();
+                    itemInfo.i = j;
+
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(FullFillSetOrItemInfo), itemInfo);
+
+                    //                        FullFillSetOrItemInfo(_treasures[i].regularSetOrItem[j].ToString());
+                }
+            }
+        }*/
+
+        private void FullFillItemsFromSetInfo(object setInfo)
+        {
+            SetInfo info = setInfo as SetInfo;
+            var _webGet = new HtmlWeb();
+            var _doc = _webGet.Load(_wikiSiteURL + info.url);
+
+            bool hasAlready = false;
+            foreach (Item i in _items)
+            {
+                if (i.url == info.url)
+                {
+                    Hashtable itemInfo = new Hashtable();
+                    itemInfo.Add("type", "item");
+                    itemInfo.Add("id", i.id);
+                    info.set.setItems.Insert(info.i, itemInfo);
+
+                    hasAlready = true;
+                }
+            }
+
+            if (!hasAlready)
+            {
+                Item item = new Item();
+
+                item.url = info.url;
+
+                item.id = itemsId;
+                itemsId++;
+
+                item.name = _doc.DocumentNode.SelectSingleNode("//table[@class]//tr[1]/td").InnerText.Trim();
+
+                item.cost = "0";
+
+                //                        item.rare = _doc.DocumentNode.SelectSingleNode("//table[@class]//tr[3]/td[2]/div/a/span/b").InnerText;
+                item.rare = _doc.DocumentNode.SelectSingleNode("//table[@class]//tr[3]//b").InnerText.Trim();
+
+                HtmlNode imgUrl = _doc.DocumentNode.SelectSingleNode("//table//tr[2]/td/a/img");
+                item.imgUrl = imgUrl.Attributes["src"].Value;
+
+                /* Load sprite  */
+                var request = WebRequest.Create(item.imgUrl);
+                var response = request.GetResponse();
+
+                using (var stream = response.GetResponseStream())
+                {
+                    item.img = Image.FromStream(stream);
+                }
+
+                /* Img div 2   */
+                item.imgDiv2 = ResizeImage(item.img, 64, 43);
+
+                item.slot = _doc.DocumentNode.SelectSingleNode("//table[@class]//tr[4]/td").InnerText.After(": ");
+
+                Hashtable itemInfo = new Hashtable();
+                itemInfo.Add("type", "item");
+                itemInfo.Add("id", item.id);
+                info.set.setItems.Insert(info.i, itemInfo);
+
+                _items.Add(item);
+
+                /*itemsGrid.Rows[itemsId].Height = 45;
+                itemsGrid.Rows[itemsId].Cells[0].Value = _items[itemsId].id;
+                itemsGrid.Rows[itemsId].Cells[1].Value = _items[itemsId].name;
+                itemsGrid.Rows[itemsId].Cells[2].Value = _items[itemsId].rare;
+                itemsGrid.Rows[itemsId].Cells[3].Value = _items[itemsId].cost;
+                itemsGrid.Rows[itemsId].Cells[4].Value = _items[itemsId].imgDiv2;
+                itemsGrid.Rows[itemsId].Cells[5].Value = _items[itemsId].url;
+                itemsGrid.Rows[itemsId].Cells[6].Value = _items[itemsId].slot;*/
+                //                Console.WriteLine("Item: " + info.treasure.id);
+            }
+
+            try
+            {
+                // Invoke the delegate on the form.
+                this.Invoke(new BarDelegate(UpdateSetBar));
+            }
+            catch
+            {
+                // Some problem occurred but we can recover.
+            }
+        }
+
+        private void ParseAllItemsFromSet(Set set)
+        {
+            if (set.setItemsURLs != null)
+                _requestsInSet += set.setItemsURLs.Count;
+
+            Console.WriteLine("Requests in set: " + _requestsInSet);
+
+            if (set.setItemsURLs != null)
+            {
+                set.setItems = new ArrayList();
+
+                for (int j = 0; j < set.setItemsURLs.Count; j++)
+                {
+                    Hashtable setHash = new Hashtable();
+                    setHash.Add("type", "null");
+                    setHash.Add("id", "null");
+
+                    set.setItems.Add(setHash);
+
+                    SetInfo setInfo = new SetInfo();
+                    setInfo.set = set;
+                    setInfo.url = set.setItemsURLs[j].ToString();
+                    setInfo.i = j;
+
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(FullFillItemsFromSetInfo), setInfo);
+                    //                        FullFillSetOrItemInfo(_treasures[i].regularSetOrItem[j].ToString());
+                }
+            }
+
+            /* Скипуем если нет итемов */
+            if (_requestsInSet == 0)
+            {
+                _requestsInSet = 0;
+                _nextSet++;
+                ParseAllItemsFromSet(_sets[_nextSet]);
+                Console.WriteLine("0 requests in set " + set.id);
+            }
+            //            }
+        }
+
+        public static Bitmap ResizeImage(Image image, int width, int height)
+        {
+            var destRect = new Rectangle(0, 0, width, height);
+            var destImage = new Bitmap(width, height);
+
+            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+
+            using (var graphics = Graphics.FromImage(destImage))
+            {
+                graphics.CompositingMode = CompositingMode.SourceCopy;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                using (var wrapMode = new ImageAttributes())
+                {
+                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
+                }
+            }
+
+            return destImage;
         }
 
         public class MiniJSON
@@ -1857,14 +2280,10 @@ namespace DOTA2WikiParser
             */
         }
 
-        private void metroButton6_Click(object sender, EventArgs e)
+        private void metroButton10_Click(object sender, EventArgs e)
         {
-            FullFillItemsGrid();
-        }
-
-        private void metroButton9_Click(object sender, EventArgs e)
-        {
-            FullFillSetsGrid();
+            _firstPartOfSet = false;
+            ParseAllItemsFromSet(_sets[_nextSet]);
         }
     }
 
@@ -1885,28 +2304,11 @@ namespace DOTA2WikiParser
 
     public class Treasure : Entity
     {
-        /*public string url;
-
-        public int id;
-        public string name;
-        public string rare;
-        public string cost;
-        public string sprite;
-        */
-
-        /*public List<string> regularSetOrItem;
-        public List<string> veryRareSetOrItem;
-        public List<string> extremelyRareSetOrItem;
-        public List<string> ultraRareSetOrItem;*/
         public ArrayList regularSetOrItem;
         public ArrayList veryRareSetOrItem;
         public ArrayList extremelyRareSetOrItem;
         public ArrayList ultraRareSetOrItem;
 
-        /*public List<Hashtable> giftsRegular;
-        public List<Hashtable> giftsVeryRare;
-        public List<Hashtable> giftsExtremelyRare;
-        public List<Hashtable> giftsUltraRare;*/
         public ArrayList giftsRegular;
         public ArrayList giftsVeryRare;
         public ArrayList giftsExtremelyRare;
@@ -1915,7 +2317,9 @@ namespace DOTA2WikiParser
 
     public class Set : Entity
     {
+        public ArrayList setItemsURLs;
 
+        public ArrayList setItems;
     }
 
     public class Item : Entity
@@ -1960,6 +2364,21 @@ namespace DOTA2WikiParser
         public Treasure treasure;
         public string url;
         public string type;
+        public int i;
+    }
+
+    public class SetInfo
+    {
+        public Set set;
+        public string url;
+        public string item;
+        public int i;
+    }
+
+    public class ItemInfo
+    {
+        public Set set;
+        public string url;
         public int i;
     }
 
