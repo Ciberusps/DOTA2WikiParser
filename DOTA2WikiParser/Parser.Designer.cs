@@ -111,7 +111,7 @@
             this.metroTabControl1.Controls.Add(this.itemsTabPage);
             this.metroTabControl1.Location = new System.Drawing.Point(23, 109);
             this.metroTabControl1.Name = "metroTabControl1";
-            this.metroTabControl1.SelectedIndex = 1;
+            this.metroTabControl1.SelectedIndex = 0;
             this.metroTabControl1.Size = new System.Drawing.Size(1540, 665);
             this.metroTabControl1.TabIndex = 0;
             this.metroTabControl1.Theme = MetroFramework.MetroThemeStyle.Dark;
@@ -138,9 +138,9 @@
             // 
             this.metroProgressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.metroProgressBar1.Location = new System.Drawing.Point(3, 604);
+            this.metroProgressBar1.Location = new System.Drawing.Point(-4, 604);
             this.metroProgressBar1.Name = "metroProgressBar1";
-            this.metroProgressBar1.Size = new System.Drawing.Size(1514, 23);
+            this.metroProgressBar1.Size = new System.Drawing.Size(1511, 23);
             this.metroProgressBar1.TabIndex = 4;
             // 
             // treasuresGrid

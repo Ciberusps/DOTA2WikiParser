@@ -230,7 +230,9 @@ namespace DOTA2WikiParser
                 HtmlAttribute att = link.Attributes["href"];
                 _curTreasureURL = att.Value;
 
-                if (_lastTreasureURL != _curTreasureURL && !_curTreasureURL.Contains("Bonus") && att.Value.Contains("_-_"))
+                if (_lastTreasureURL != _curTreasureURL 
+                    && !_curTreasureURL.Contains("Bonus_Cache") 
+                    && _curTreasureURL.Contains("_-_"))
                 {
                     _treasures.Add(new Treasure());
                     _treasures[i].url = att.Value;
@@ -349,18 +351,21 @@ namespace DOTA2WikiParser
                  || allContent[i].InnerText == "Gold Tier"
                  || allContent[i].InnerText == "Contents")
                 {
-                    if (treasure.regularSetOrItem == null)
-                        //                        treasure.regularSetOrItem = new List<string>();
-                        treasure.regularSetOrItem = new ArrayList();
-
                     foreach (var link in allLinks)
                     {
                         if (link.Line > allContent[i].Line
                             && link.Line < allContent[i + 1].Line
                             && link.Attributes["href"].Value != lastSetOrItemURL
                             && !link.Attributes["href"].Value.Contains("?version=")
-                            && !link.Attributes["href"].Value.Contains("index.php"))
+                            && !link.Attributes["href"].Value.Contains("index.php")
+                            && !link.Attributes["href"].Value.Contains("Compendium_Levels")
+                            && !link.Attributes["href"].Value.Contains("Random")
+                            && !link.Attributes["href"].Value.Contains("Upgrade"))
                         {
+                            if (treasure.regularSetOrItem == null)
+                                //                        treasure.regularSetOrItem = new List<string>();
+                                treasure.regularSetOrItem = new ArrayList();
+
                             Console.WriteLine("\v" + link.Attributes["href"].Value + " " + link.Line);
                             treasure.regularSetOrItem.Add(link.Attributes["href"].Value);
                             //                            Console.WriteLine(treasure.regularSetOrItem[treasure.regularSetOrItem.Count - 1]);
@@ -375,18 +380,21 @@ namespace DOTA2WikiParser
                  || allContent[i].InnerText == "Very Rare Bonus"
                  || allContent[i].InnerText == "Rare Bonus")
                 {
-                    if (treasure.veryRareSetOrItem == null)
-                        //                        treasure.veryRareSetOrItem = new List<string>();
-                        treasure.veryRareSetOrItem = new ArrayList();
-
                     foreach (var link in allLinks)
                     {
                         if (link.Line > allContent[i].Line
                             && link.Line < allContent[i + 1].Line
                             && link.Attributes["href"].Value != lastSetOrItemURL
                             && !link.Attributes["href"].Value.Contains("?version=")
-                            && !link.Attributes["href"].Value.Contains("index.php"))
+                            && !link.Attributes["href"].Value.Contains("index.php")
+                            && !link.Attributes["href"].Value.Contains("Compendium_Levels")
+                            && !link.Attributes["href"].Value.Contains("Random")
+                            && !link.Attributes["href"].Value.Contains("Upgrade"))
                         {
+                            if (treasure.veryRareSetOrItem == null)
+                                //                        treasure.veryRareSetOrItem = new List<string>();
+                                treasure.veryRareSetOrItem = new ArrayList();
+
                             Console.WriteLine("\v" + link.Attributes["href"].Value + " " + link.Line);
                             treasure.veryRareSetOrItem.Add(link.Attributes["href"].Value);
                             //                            Console.WriteLine(treasure.regularSetOrItem[treasure.regularSetOrItem.Count - 1]);
@@ -400,18 +408,21 @@ namespace DOTA2WikiParser
                  || allContent[i].InnerText == "Extremely Rare Bonus"
                  || allContent[i].InnerText == "Extremely Bonus")
                 {
-                    if (treasure.extremelyRareSetOrItem == null)
-                        //                        treasure.extremelyRareSetOrItem = new List<string>();
-                        treasure.extremelyRareSetOrItem = new ArrayList();
-
                     foreach (var link in allLinks)
                     {
                         if (link.Line > allContent[i].Line
                             && link.Line < allContent[i + 1].Line
                             && link.Attributes["href"].Value != lastSetOrItemURL
                             && !link.Attributes["href"].Value.Contains("?version=")
-                            && !link.Attributes["href"].Value.Contains("index.php"))
+                            && !link.Attributes["href"].Value.Contains("index.php")
+                            && !link.Attributes["href"].Value.Contains("Compendium_Levels")
+                            && !link.Attributes["href"].Value.Contains("Random")
+                            && !link.Attributes["href"].Value.Contains("Upgrade"))
                         {
+                            if (treasure.extremelyRareSetOrItem == null)
+                                //                        treasure.extremelyRareSetOrItem = new List<string>();
+                                treasure.extremelyRareSetOrItem = new ArrayList();
+
                             Console.WriteLine("\v" + link.Attributes["href"].Value + " " + link.Line);
                             treasure.extremelyRareSetOrItem.Add(link.Attributes["href"].Value);
                             //                            Console.WriteLine(treasure.regularSetOrItem[treasure.regularSetOrItem.Count - 1]);
@@ -425,19 +436,21 @@ namespace DOTA2WikiParser
                  || allContent[i].InnerText == "Couriers"
                  || allContent[i].InnerText == "Super Very Rare Bonus")
                 {
-                    if (treasure.ultraRareSetOrItem == null)
-                        //                        treasure.ultraRareSetOrItem = new List<string>();
-                        treasure.ultraRareSetOrItem = new ArrayList();
-
-
                     foreach (var link in allLinks)
                     {
                         if (link.Line > allContent[i].Line
                             && link.Line < allContent[i + 1].Line
                             && link.Attributes["href"].Value != lastSetOrItemURL
                             && !link.Attributes["href"].Value.Contains("?version=")
-                            && !link.Attributes["href"].Value.Contains("index.php"))
+                            && !link.Attributes["href"].Value.Contains("index.php")
+                            && !link.Attributes["href"].Value.Contains("Compendium_Levels")
+                            && !link.Attributes["href"].Value.Contains("Random")
+                            && !link.Attributes["href"].Value.Contains("Upgrade"))
                         {
+                            if (treasure.ultraRareSetOrItem == null)
+                                //                        treasure.ultraRareSetOrItem = new List<string>();
+                                treasure.ultraRareSetOrItem = new ArrayList();
+
                             Console.WriteLine("\v" + link.Attributes["href"].Value + " " + link.Line);
                             treasure.ultraRareSetOrItem.Add(link.Attributes["href"].Value);
                             //                            Console.WriteLine(treasure.regularSetOrItem[treasure.regularSetOrItem.Count - 1]);
@@ -546,7 +559,8 @@ namespace DOTA2WikiParser
             if (type != null)
             {
                 //                Console.WriteLine(type.InnerText);
-                if (type.InnerText.Contains("Bundle"))
+                if (type.InnerText.Contains("Bundle")
+                    || type.InnerText.Contains("Pack"))
                 {
                     bool hasAlready = false;
                     foreach (Set s in _sets)
@@ -555,8 +569,22 @@ namespace DOTA2WikiParser
                         {
                             Hashtable itemInfo = new Hashtable();
                             itemInfo.Add("type", "set");
-                            itemInfo.Add("id", s.id);
-                            info.treasure.giftsRegular.Insert(info.i, itemInfo);
+                            itemInfo.Add("id", s.id.ToString());
+                            switch (info.type)
+                            {
+                                case "Regular":
+                                    info.treasure.giftsRegular[info.i] = itemInfo;
+                                    break;
+                                case "VeryRare":
+                                    info.treasure.giftsVeryRare[info.i] = itemInfo;
+                                    break;
+                                case "ExtremelyRare":
+                                    info.treasure.giftsExtremelyRare[info.i] = itemInfo;
+                                    break;
+                                case "UltraRare":
+                                    info.treasure.giftsUltraRare[info.i] = itemInfo;
+                                    break;
+                            }
 
                             hasAlready = true;
                         }
@@ -594,8 +622,23 @@ namespace DOTA2WikiParser
 
                         Hashtable setInfo = new Hashtable();
                         setInfo.Add("type", "set");
-                        setInfo.Add("id", set.id);
-                        info.treasure.giftsRegular.Insert(info.i, setInfo);
+                        setInfo.Add("id", set.id.ToString());
+
+                        switch (info.type)
+                        {
+                            case "Regular":
+                                info.treasure.giftsRegular[info.i] = setInfo;
+                                break;
+                            case "VeryRare":
+                                info.treasure.giftsVeryRare[info.i] = setInfo;
+                                break;
+                            case "ExtremelyRare":
+                                info.treasure.giftsExtremelyRare[info.i] = setInfo;
+                                break;
+                            case "UltraRare":
+                                info.treasure.giftsUltraRare[info.i] = setInfo;
+                                break;
+                        }
 
                         /* Parse itemsurls */
                         HtmlNodeCollection h2 = _doc.DocumentNode.SelectNodes("//h2//span[@id]");
@@ -696,8 +739,23 @@ namespace DOTA2WikiParser
                         {
                             Hashtable itemInfo = new Hashtable();
                             itemInfo.Add("type", "treasure");
-                            itemInfo.Add("id", s.id);
-                            info.treasure.giftsRegular.Insert(info.i, itemInfo);
+                            itemInfo.Add("id", s.id.ToString());
+
+                            switch (info.type)
+                            {
+                                case "Regular":
+                                    info.treasure.giftsRegular[info.i] = itemInfo;
+                                    break;
+                                case "VeryRare":
+                                    info.treasure.giftsVeryRare[info.i] = itemInfo;
+                                    break;
+                                case "ExtremelyRare":
+                                    info.treasure.giftsExtremelyRare[info.i] = itemInfo;
+                                    break;
+                                case "UltraRare":
+                                    info.treasure.giftsUltraRare[info.i] = itemInfo;
+                                    break;
+                            }
                         }
                     }
                 }
@@ -710,8 +768,23 @@ namespace DOTA2WikiParser
                         {
                             Hashtable itemInfo = new Hashtable();
                             itemInfo.Add("type", "item");
-                            itemInfo.Add("id", i.id);
-                            info.treasure.giftsRegular.Insert(info.i, itemInfo);
+                            itemInfo.Add("id", i.id.ToString());
+
+                            switch (info.type)
+                            {
+                                case "Regular":
+                                    info.treasure.giftsRegular[info.i] = itemInfo;
+                                    break;
+                                case "VeryRare":
+                                    info.treasure.giftsVeryRare[info.i] = itemInfo;
+                                    break;
+                                case "ExtremelyRare":
+                                    info.treasure.giftsExtremelyRare[info.i] = itemInfo;
+                                    break;
+                                case "UltraRare":
+                                    info.treasure.giftsUltraRare[info.i] = itemInfo;
+                                    break;
+                            }
 
                             hasAlready = true;
                         }
@@ -752,12 +825,25 @@ namespace DOTA2WikiParser
 
                         Hashtable itemInfo = new Hashtable();
                         itemInfo.Add("type", "item");
-                        itemInfo.Add("id", item.id);
-                        info.treasure.giftsRegular.Insert(info.i, itemInfo);
+                        itemInfo.Add("id", item.id.ToString());
+
+                        switch (info.type)
+                        {
+                            case "Regular":
+                                info.treasure.giftsRegular[info.i] = itemInfo;
+                                break;
+                            case "VeryRare":
+                                info.treasure.giftsVeryRare[info.i] = itemInfo;
+                                break;
+                            case "ExtremelyRare":
+                                info.treasure.giftsExtremelyRare[info.i] = itemInfo;
+                                break;
+                            case "UltraRare":
+                                info.treasure.giftsUltraRare[info.i] = itemInfo;
+                                break;
+                        }
 
                         _items.Add(item);
-
-
                         /*itemsGrid.Rows[itemsId].Height = 45;
                         itemsGrid.Rows[itemsId].Cells[0].Value = _items[itemsId].id;
                         itemsGrid.Rows[itemsId].Cells[1].Value = _items[itemsId].name;
@@ -856,7 +942,7 @@ namespace DOTA2WikiParser
                 {
                     Hashtable regularSetOrItemInfo = new Hashtable();
                     regularSetOrItemInfo.Add("type", "null");
-                    regularSetOrItemInfo.Add("id", "null");
+                    regularSetOrItemInfo.Add("id", "0");
 
                     treasure.giftsRegular.Add(regularSetOrItemInfo);
 
@@ -880,9 +966,9 @@ namespace DOTA2WikiParser
                 {
                     Hashtable veryRareSetOrItemInfo = new Hashtable();
                     veryRareSetOrItemInfo.Add("type", "null");
-                    veryRareSetOrItemInfo.Add("id", "null");
+                    veryRareSetOrItemInfo.Add("id", "0");
 
-                    treasure.giftsRegular.Add(veryRareSetOrItemInfo);
+                    treasure.giftsVeryRare.Add(veryRareSetOrItemInfo);
 
                     SetOrItemInfo setOrItemInfo = new SetOrItemInfo();
                     setOrItemInfo.treasure = treasure;
@@ -903,14 +989,14 @@ namespace DOTA2WikiParser
                 {
                     Hashtable ultraRareSetOrItem = new Hashtable();
                     ultraRareSetOrItem.Add("type", "null");
-                    ultraRareSetOrItem.Add("id", "null");
+                    ultraRareSetOrItem.Add("id", "0");
 
-                    treasure.giftsRegular.Add(ultraRareSetOrItem);
+                    treasure.giftsUltraRare.Add(ultraRareSetOrItem);
 
                     SetOrItemInfo setOrItemInfo = new SetOrItemInfo();
                     setOrItemInfo.treasure = treasure;
                     setOrItemInfo.url = treasure.ultraRareSetOrItem[j].ToString();
-                    setOrItemInfo.type = "VeryRare";
+                    setOrItemInfo.type = "UltraRare";
                     setOrItemInfo.i = j;
 
                     ThreadPool.QueueUserWorkItem(new WaitCallback(FullFillSetOrItemInfo), setOrItemInfo);
@@ -926,14 +1012,14 @@ namespace DOTA2WikiParser
                 {
                     Hashtable extremelyRareSetOrItem = new Hashtable();
                     extremelyRareSetOrItem.Add("type", "null");
-                    extremelyRareSetOrItem.Add("id", "null");
+                    extremelyRareSetOrItem.Add("id", "0");
 
-                    treasure.giftsRegular.Add(extremelyRareSetOrItem);
+                    treasure.giftsExtremelyRare.Add(extremelyRareSetOrItem);
 
                     SetOrItemInfo setOrItemInfo = new SetOrItemInfo();
                     setOrItemInfo.treasure = treasure;
                     setOrItemInfo.url = treasure.extremelyRareSetOrItem[j].ToString();
-                    setOrItemInfo.type = "VeryRare";
+                    setOrItemInfo.type = "ExtremelyRare";
                     setOrItemInfo.i = j;
 
                     ThreadPool.QueueUserWorkItem(new WaitCallback(FullFillSetOrItemInfo), setOrItemInfo);
@@ -1035,18 +1121,18 @@ namespace DOTA2WikiParser
         private void UpdateSetBar()
         {
             metroProgressBar3.Value++;
-//            Console.WriteLine("   Bar: " + metroProgressBar3.Value +
-//                              "\n   NextSet " + _nextSet +
-//                              "   reqInSum " + _requestsInSum);
+            //            Console.WriteLine("   Bar: " + metroProgressBar3.Value +
+            //                              "\n   NextSet " + _nextSet +
+            //                              "   reqInSum " + _requestsInSum);
             if (metroProgressBar3.Value >= _requestsInSum + _requestsInSet)
             {
                 _requestsInSum += _requestsInSet;
                 _requestsInSet = 0;
                 _nextSet++;
                 Console.WriteLine(_nextSet);
-                if (_firstPartOfSet && _nextSet != _sets.Count/2)
+                if (_firstPartOfSet && _nextSet != _sets.Count / 2)
                     ParseAllItemsFromSet(_sets[_nextSet]);
-                else if (_nextSet == _sets.Count/2)
+                else if (_nextSet == _sets.Count / 2)
                     MessageBox.Show("First part end");
 
                 if (!_firstPartOfSet && _nextSet != _sets.Count)
@@ -1101,36 +1187,40 @@ namespace DOTA2WikiParser
                 treasureHashtable.Add("name", treasure.name);
                 treasureHashtable.Add("rare", treasure.rare);
                 treasureHashtable.Add("cost", treasure.cost);
-                treasureHashtable.Add("sprite", treasure.imgUrl);
-
+                treasureHashtable.Add("imgURL", treasure.imgUrl);
+                treasureHashtable.Add("sprite", treasure.id + "_" + treasure.name);
                 /*if (System.IO.File.Exists(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png"))
                     System.IO.File.Delete(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");*/
+
                 treasure.img.Save(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");
 
                 /*if (System.IO.File.Exists(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png"))
                     System.IO.File.Delete(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");*/
                 treasure.imgDiv2.Save(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");
 
+                Hashtable gifts = new Hashtable();
+
                 if (treasure.regularSetOrItem != null)
-                {
-                    treasureHashtable.Add("Regular", treasure.regularSetOrItem);
-                }
+                    gifts.Add("RegularURLs", treasure.regularSetOrItem);
+                if (treasure.giftsRegular != null)
+                    gifts.Add("Regular", treasure.giftsRegular);
 
                 if (treasure.veryRareSetOrItem != null)
-                {
-                    treasureHashtable.Add("VeryRare", treasure.veryRareSetOrItem);
-                }
+                    gifts.Add("VeryRareURLs", treasure.veryRareSetOrItem);
+                if (treasure.giftsVeryRare != null)
+                    gifts.Add("VeryRare", treasure.giftsVeryRare);
 
                 if (treasure.extremelyRareSetOrItem != null)
-                {
-                    treasureHashtable.Add("ExtremelyRare", treasure.extremelyRareSetOrItem);
-                }
+                    gifts.Add("ExtremelyRareURLs", treasure.extremelyRareSetOrItem);
+                if (treasure.giftsExtremelyRare != null)
+                    gifts.Add("ExtremelyRare", treasure.giftsExtremelyRare);
 
                 if (treasure.ultraRareSetOrItem != null)
-                {
-                    treasureHashtable.Add("UltraRare", treasure.ultraRareSetOrItem);
-                }
+                    gifts.Add("UltraRareURLs", treasure.ultraRareSetOrItem);
+                if (treasure.giftsUltraRare != null)
+                    gifts.Add("UltraRare", treasure.giftsUltraRare);
 
+                treasureHashtable.Add("gifts", gifts);
                 _treasuresJSONArray.Add(treasureHashtable);
             }
 
@@ -1146,30 +1236,35 @@ namespace DOTA2WikiParser
                 Console.WriteLine("CLEAR");
             }
 
-            foreach (Set set in _sets)
+            if (_sets != null)
             {
-                Hashtable setHashtable = new Hashtable();
-                setHashtable.Add("url", set.url);
-                setHashtable.Add("id", set.id.ToString());
-                setHashtable.Add("name", set.name);
-                setHashtable.Add("rare", set.rare);
-                setHashtable.Add("cost", set.cost);
-                setHashtable.Add("sprite", set.imgUrl);
-
-                /*if (System.IO.File.Exists(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png"))
-                    System.IO.File.Delete(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");*/
-                set.img.Save(@_setsImagesPath + @"\" + set.id + "_" + /*set.name + */".png");
-
-                /*if (System.IO.File.Exists(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png"))
-                    System.IO.File.Delete(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");*/
-                set.imgDiv2.Save(@_setsImagesPathDiv2 + @"\" + set.id + "_" + /*set.name + */".png");
-
-                if (set.setItemsURLs != null)
+                foreach (Set set in _sets)
                 {
-                    setHashtable.Add("items", set.setItemsURLs);
-                }
+                    Hashtable setHashtable = new Hashtable();
+                    setHashtable.Add("url", set.url);
+                    setHashtable.Add("id", set.id.ToString());
+                    setHashtable.Add("name", set.name);
+                    setHashtable.Add("rare", set.rare);
+                    setHashtable.Add("cost", set.cost);
+                    setHashtable.Add("imgURL", set.imgUrl);
+                    setHashtable.Add("sprite", "set_" + set.id.ToString() /*+ "_" + set.name*/);
+                    /*if (System.IO.File.Exists(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png"))
+                        System.IO.File.Delete(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");*/
 
-                _setsJSONArray.Add(setHashtable);
+                    set.img.Save(@_setsImagesPath + @"\" + "set_" + set.id + /*"_" + set.name + */".png");
+
+                    /*if (System.IO.File.Exists(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png"))
+                        System.IO.File.Delete(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");*/
+                    set.imgDiv2.Save(@_setsImagesPathDiv2 + @"\" + "set_" + set.id + /*"_" + set.name + */".png");
+
+                    if (set.setItemsURLs != null)
+                        setHashtable.Add("itemsURLs", set.setItemsURLs);
+
+                    if (set.setItems != null)
+                        setHashtable.Add("items", set.setItems);
+
+                    _setsJSONArray.Add(setHashtable);
+                }
             }
 
             /* Fullfill items info */
@@ -1183,27 +1278,31 @@ namespace DOTA2WikiParser
                 _itemsJSONArray.Clear();
             }
 
-            foreach (Item item in _items)
+            if (_items != null)
             {
-                Hashtable itemHashtable = new Hashtable();
-                itemHashtable.Add("url", item.url);
-                itemHashtable.Add("id", item.id.ToString());
-                itemHashtable.Add("name", item.name);
-                itemHashtable.Add("rare", item.rare);
-                itemHashtable.Add("cost", item.cost);
-                itemHashtable.Add("sprite", item.imgUrl);
-                itemHashtable.Add("slot", item.slot);
+                foreach (Item item in _items)
+                {
+                    Hashtable itemHashtable = new Hashtable();
+                    itemHashtable.Add("url", item.url);
+                    itemHashtable.Add("id", item.id.ToString());
+                    itemHashtable.Add("name", item.name);
+                    itemHashtable.Add("rare", item.rare);
+                    itemHashtable.Add("cost", item.cost);
+                    itemHashtable.Add("imgURL", item.imgUrl);
+                    itemHashtable.Add("sprite", "item_" + item.id.ToString() /*+ "_" + item.name*/);
+                    itemHashtable.Add("slot", item.slot);
 
-                /*if (System.IO.File.Exists(@_itemsImagesPath + @"\" + item.id + "_" + item.name + ".png"))
-                    System.IO.File.Delete(@_itemsImagesPath + @"\" + item.id + "_" + item.name + ".png");*/
-                item.img.Save(@_itemsImagesPath + @"\" + @item.id + "_" + /*item.name + */".png");
+                    /*if (System.IO.File.Exists(@_itemsImagesPath + @"\" + item.id + "_" + item.name + ".png"))
+                        System.IO.File.Delete(@_itemsImagesPath + @"\" + item.id + "_" + item.name + ".png");*/
+                    item.img.Save(@_itemsImagesPath + @"\" + "item_" + @item.id + /*"_" + item.name + */".png");
 
 
-                /*if (System.IO.File.Exists(@_itemsImagesPathDiv2 + @"\" + item.id + "_" + item.name + ".png"))
-                    System.IO.File.Delete(@_itemsImagesPathDiv2 + @"\" + item.id + "_" + item.name + ".png");*/
-                item.imgDiv2.Save(@_itemsImagesPathDiv2 + @"\" + @item.id + "_" + /*item.name + */".png");
+                    /*if (System.IO.File.Exists(@_itemsImagesPathDiv2 + @"\" + item.id + "_" + item.name + ".png"))
+                        System.IO.File.Delete(@_itemsImagesPathDiv2 + @"\" + item.id + "_" + item.name + ".png");*/
+                    item.imgDiv2.Save(@_itemsImagesPathDiv2 + @"\" + "item_" + @item.id + /*"_" + item.name + */".png");
 
-                _itemsJSONArray.Add(itemHashtable);
+                    _itemsJSONArray.Add(itemHashtable);
+                }
             }
 
             string json = MiniJSON.JsonEncode(_treasuresJSONRoot);
@@ -1244,8 +1343,8 @@ namespace DOTA2WikiParser
                     treasure.name = hashtable["name"].ToString();
                     treasure.rare = hashtable["rare"].ToString();
                     treasure.cost = hashtable["cost"].ToString();
-                    treasure.imgUrl = hashtable["sprite"].ToString();
-
+                    treasure.imgUrl = hashtable["imgURL"].ToString();
+                    treasure.sprite = hashtable["sprite"].ToString();
 
                     using (var bmpTemp = new Bitmap(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png"))
                     {
@@ -1257,15 +1356,55 @@ namespace DOTA2WikiParser
                     }
                     //treasure.img = Image.FromFile(@_treasuresImagesPath + @"\" + treasure.id + "_" + treasure.name + ".png");
                     //treasure.imgDiv2 = Image.FromFile(@_treasuresImagesDiv2Path + @"\" + treasure.id + "_" + treasure.name + ".png");
+                    Hashtable gifts = hashtable["gifts"] as Hashtable;
 
-                    if (hashtable.ContainsKey("Regular"))
-                        treasure.regularSetOrItem = hashtable["Regular"] as ArrayList;
-                    if (hashtable.ContainsKey("VeryRare"))
-                        treasure.veryRareSetOrItem = hashtable["VeryRare"] as ArrayList;
-                    if (hashtable.ContainsKey("ExtremelyRare"))
-                        treasure.extremelyRareSetOrItem = hashtable["ExtremelyRare"] as ArrayList;
-                    if (hashtable.ContainsKey("UltraRare"))
-                        treasure.ultraRareSetOrItem = hashtable["UltraRare"] as ArrayList;
+                    Console.WriteLine(_treasures.Count);
+                    if (gifts.ContainsKey("RegularURLs"))
+                    {
+                        treasure.regularSetOrItem = new ArrayList();
+                        treasure.regularSetOrItem = gifts["RegularURLs"] as ArrayList;
+                    }
+
+                    if (gifts.ContainsKey("Regular"))
+                    {
+                        treasure.giftsRegular = new ArrayList();
+                        treasure.giftsRegular = gifts["Regular"] as ArrayList;
+                    }
+
+                    if (gifts.ContainsKey("VeryRareURLs"))
+                    {
+                        treasure.giftsVeryRare = new ArrayList();
+                        treasure.veryRareSetOrItem = gifts["VeryRareURLs"] as ArrayList;
+                    }
+
+                    if (gifts.ContainsKey("VeryRare"))
+                    {
+                        treasure.giftsVeryRare = new ArrayList();
+                        treasure.giftsVeryRare = gifts["VeryRare"] as ArrayList;
+                    }
+
+                    if (gifts.ContainsKey("ExtremelyRareURLs"))
+                    {
+                        treasure.extremelyRareSetOrItem = new ArrayList();
+                        treasure.extremelyRareSetOrItem = gifts["ExtremelyRareURLs"] as ArrayList;
+                    }
+
+                    if (gifts.ContainsKey("ExtremelyRare"))
+                    {
+                        treasure.giftsExtremelyRare = new ArrayList();
+                        treasure.giftsExtremelyRare = gifts["ExtremelyRare"] as ArrayList;
+                    }
+
+                    if (gifts.ContainsKey("UltraRareURLs"))
+                    {
+                        treasure.ultraRareSetOrItem = new ArrayList();
+                        treasure.ultraRareSetOrItem = gifts["UltraRareURLs"] as ArrayList;
+                    }
+                    if (gifts.ContainsKey("UltraRare"))
+                    {
+                        treasure.giftsUltraRare = new ArrayList();
+                        treasure.giftsUltraRare = gifts["UltraRare"] as ArrayList;
+                    }
 
                     _treasures.Add(treasure);
                 }
@@ -1287,13 +1426,14 @@ namespace DOTA2WikiParser
                     set.name = hashtable["name"].ToString();
                     set.rare = hashtable["rare"].ToString();
                     set.cost = hashtable["cost"].ToString();
-                    set.imgUrl = hashtable["sprite"].ToString();
+                    set.imgUrl = hashtable["imgURL"].ToString();
+                    set.sprite = hashtable["sprite"].ToString();
 
-                    using (var bmpTemp = new Bitmap(@_setsImagesPath + @"\" + set.id + "_" + /*set.name + */".png"))
+                    using (var bmpTemp = new Bitmap(@_setsImagesPath + @"\" + "set_" + set.id + /*"_" + set.name + */".png"))
                     {
                         set.img = new Bitmap(bmpTemp);
                     }
-                    using (var bmpTemp = new Bitmap(@_setsImagesPathDiv2 + @"\" + set.id + "_" + /*set.name + */".png"))
+                    using (var bmpTemp = new Bitmap(@_setsImagesPathDiv2 + @"\" + "set_" + set.id + /*"_" + set.name + */".png"))
                     {
                         set.imgDiv2 = new Bitmap(bmpTemp);
                     }
@@ -1323,14 +1463,15 @@ namespace DOTA2WikiParser
                     item.name = hashtable["name"].ToString();
                     item.rare = hashtable["rare"].ToString();
                     item.cost = hashtable["cost"].ToString();
-                    item.imgUrl = hashtable["sprite"].ToString();
+                    item.imgUrl = hashtable["imgURL"].ToString();
+                    item.sprite = hashtable["sprite"].ToString();
                     item.slot = hashtable["slot"].ToString();
 
-                    using (var bmpTemp = new Bitmap(@_itemsImagesPath + @"\" + item.id + "_" + /*item.name + */".png"))
+                    using (var bmpTemp = new Bitmap(@_itemsImagesPath + @"\" + "item_" + item.id + /*"_" + item.name + */".png"))
                     {
                         item.img = new Bitmap(bmpTemp);
                     }
-                    using (var bmpTemp = new Bitmap(@_itemsImagesPathDiv2 + @"\" + item.id + "_" + /*item.name + */".png"))
+                    using (var bmpTemp = new Bitmap(@_itemsImagesPathDiv2 + @"\" + "item_" + item.id + /*"_" + item.name + */".png"))
                     {
                         item.imgDiv2 = new Bitmap(bmpTemp);
                     }
@@ -1340,7 +1481,6 @@ namespace DOTA2WikiParser
                     _items.Add(item);
                 }
             }
-
         }
 
         private void metroButton1_Click(object sender, EventArgs e)
@@ -1366,8 +1506,10 @@ namespace DOTA2WikiParser
 
         private void metroButton2_Click(object sender, EventArgs e)
         {
-            _sets.Clear();
-            _items.Clear();
+            if (_sets != null)
+                _sets.Clear();
+            if (_items != null)
+                _items.Clear();
 
             _numOfReg = 0;
             for (int i = 0; i < _treasures.Count; i++)
@@ -1542,7 +1684,7 @@ namespace DOTA2WikiParser
                 {
                     Hashtable setHash = new Hashtable();
                     setHash.Add("type", "null");
-                    setHash.Add("id", "null");
+                    setHash.Add("id", "0");
 
                     set.setItems.Add(setHash);
 
@@ -2299,6 +2441,7 @@ namespace DOTA2WikiParser
 
         public Image img;
         public Image imgDiv2;
+        public Image customSize;
         public string imgUrl;
     }
 
